@@ -1,11 +1,28 @@
 import React, { Component } from 'react';
 import { Tablature, ITabNoteLocation, INote, NoteLetter } from './submodules/tablature-react/src/tablature/tablature';
+import { IStringedNote, IChordMelodyService, ChordMelodyService } from './services/chord-melody-service';
 import './App.css';
 
+enum Interval {
+  Root,
+  FlatSecond,
+  Second,
+  FlatThird,
+  Third,
+  Fourth,
+  FlatFifth,
+  Fifth,
+  FlatSixth,
+  Sixth,
+  FlatSeventh,
+  Seventh
+}
+
 export default class App extends Component<IAppProps, IAppState> {
-  private readonly tabsKey = 'tabs';
-  private readonly menuPixelShiftX = 15;
-  private readonly menuPixelShiftY = 15;
+  private readonly tabsKey: string = 'tabs';
+  private readonly menuPixelShiftX: number = 15;
+  private readonly menuPixelShiftY: number = 15;
+  private readonly chordMelodyService: IChordMelodyService = new ChordMelodyService();
 
   constructor(props: IAppProps) {
     super(props);
@@ -31,6 +48,8 @@ export default class App extends Component<IAppProps, IAppState> {
         ></Tablature>
 
         {this.getMenuEl()}
+
+        {this.getSuggestedChordsDisplay()}
       </div>
     );
   }
@@ -94,7 +113,43 @@ export default class App extends Component<IAppProps, IAppState> {
     this.setState({ selectedIntervals: intervalsCopy });
   }
 
-  onGetChordClick = () => {
+  onGetChordsClick = (): void => {
+    this.setState({ suggestedChords: this.getSuggestedChords() });
+    this.closeMenu();
+  }
+
+  private getSuggestedChords(): (number | null)[][] | null {
+    const melodyStringedNote: IStringedNote | null = this.getFocusedNoteAsStringedNote();
+
+    if (melodyStringedNote === null) {
+      return null;
+    }
+
+    const requiredNotesExcludingMelody = this.state.selectedIntervals.map(interval => {
+      return this.getNoteLetterFromRootAndInterval(this.state.selectedChordRoot as NoteLetter, interval);
+    });
+
+    debugger;
+
+    const suggestedChords: (number | null)[][] | null = this.chordMelodyService.getChords(requiredNotesExcludingMelody, this.state.tuning, 24, melodyStringedNote, this.state.maxFretDistance);
+
+    return suggestedChords;
+  }
+
+  private getFocusedNoteAsStringedNote(): IStringedNote | null {
+    const focusedChord: (number | null)[] = this.state.chords[this.state.focusedNote.chordIndex];
+    const melodyFret: number | null = focusedChord[this.state.focusedNote.stringIndex];
+
+    if (melodyFret === null) {
+      return null;
+    }
+
+    const melodyNote: IStringedNote = {
+      fret: melodyFret,
+      stringIndex: this.state.focusedNote.stringIndex
+    };
+
+    return melodyNote;
   }
 
   private openMenu(x: number, y: number): void {
@@ -107,6 +162,14 @@ export default class App extends Component<IAppProps, IAppState> {
 
   private closeMenu(): void {
     this.setState({ menuIsOpen: false });
+  }
+
+  private getNoteLetterFromRootAndInterval(root: NoteLetter, interval: Interval): NoteLetter {
+    let note: number = root + interval;
+
+    return note > 11
+      ? (note - 12)
+      : note
   }
 
   private getInitialState(): IAppState {
@@ -162,7 +225,9 @@ export default class App extends Component<IAppProps, IAppState> {
       menuX: 0,
       menuY: 0,
       selectedChordRoot: NoteLetter.C,
-      selectedIntervals: [Interval.Root, Interval.Third, Interval.Fifth]
+      selectedIntervals: [Interval.Root, Interval.Third, Interval.Fifth],
+      maxFretDistance: 4,
+      suggestedChords: null
     };
   }
 
@@ -210,9 +275,33 @@ export default class App extends Component<IAppProps, IAppState> {
           </tbody>
         </table>
 
-        <button onClick={this.onGetChordClick}>Get Chords</button>
+        <button onClick={this.onGetChordsClick}>Get Chords</button>
       </div>
     );
+  }
+
+  private getSuggestedChordsDisplay(): JSX.Element | null {
+    if (!this.state.suggestedChords) {
+      return null;
+    }
+
+    if (!this.state.suggestedChords.length) {
+      return <div>No chords found</div>;
+    }
+
+    return <div className='Suggested-Chords'>
+      <Tablature
+        chords={this.state.suggestedChords}
+        tuning={this.state.tuning}
+        maxFretNum={this.state.maxFretNum}
+        mapFromNoteLetterEnumToString={this.state.mapFromNoteLetterEnumToString}
+        focusedNote={this.state.focusedNote}
+        onKeyBoardNavigation={this.onKeyBoardNavigation}
+        onEdit={this.onEdit}
+        onNoteClick={() => { }}
+        onNoteRightClick={() => { }}
+      ></Tablature>
+    </div>
   }
 }
 
@@ -231,19 +320,8 @@ interface IAppState {
   menuY: number;
   selectedChordRoot: NoteLetter;
   selectedIntervals: Interval[];
-}
-
-enum Interval {
-  Root,
-  FlatSecond,
-  Second,
-  FlatThird,
-  Third,
-  Fourth,
-  FlatFifth,
-  Fifth,
-  FlatSixth,
-  Sixth,
-  FlatSeventh,
-  Seventh
+  maxFretDistance: number;
+  // If null, we are not currently suggesting chords.
+  // If empty, we are suggesting chords but there are none.
+  suggestedChords: (number | null)[][] | null;
 }

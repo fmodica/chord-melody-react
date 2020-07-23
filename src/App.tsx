@@ -1,26 +1,160 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { Component } from 'react';
+import { Tablature, ITabNoteLocation, INote, NoteLetter } from './submodules/tablature-react/src/tablature/tablature';
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+export default class App extends Component<IAppProps, IAppState> {
+  private readonly tabsKey = 'tabs';
+  private readonly menuPixelShiftX = 10;
+  private readonly menuPixelShiftY = 10;
+
+  constructor(props: IAppProps) {
+    super(props);
+
+    this.state = this.getInitialState();
+  }
+
+  render(): JSX.Element {
+    return (
+      <div className="app">
+        <button className='reset-btn' onClick={this.onReset}>Reset</button>
+
+        <Tablature
+          chords={this.state.chords}
+          tuning={this.state.tuning}
+          maxFretNum={this.state.maxFretNum}
+          mapFromNoteLetterEnumToString={this.state.mapFromNoteLetterEnumToString}
+          focusedNote={this.state.focusedNote}
+          onKeyBoardNavigation={this.onKeyBoardNavigation}
+          onEdit={this.onEdit}
+          onNoteClick={this.onNoteClick}
+          onNoteRightClick={this.onNoteRightClick}
+        ></Tablature>
+
+        {this.getMenuEl()}
+      </div>
+    );
+  }
+
+  componentDidMount(): void {
+    const savedChordsStr = window.localStorage.getItem(this.tabsKey);
+
+    if (!savedChordsStr) {
+      return;
+    }
+
+    const chords: (number | null)[][] = JSON.parse(savedChordsStr);
+
+    this.onEdit(chords, this.state.focusedNote);
+  }
+
+  onKeyBoardNavigation = (newFocusedNote: ITabNoteLocation, e: KeyboardEvent): void => {
+    e.preventDefault();
+    this.setState({ focusedNote: newFocusedNote })
+  }
+
+  onFocusedNoteChange = (newFocusedNote: ITabNoteLocation): void => {
+    this.setState({ focusedNote: newFocusedNote });
+  }
+
+  onEdit = (newChords: (number | null)[][], newFocusedNote: ITabNoteLocation): void => {
+    this.setState({ chords: newChords, focusedNote: newFocusedNote });
+    window.localStorage.setItem(this.tabsKey, JSON.stringify(newChords));
+  }
+
+  onNoteClick = (newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void => {
+    this.setState({ focusedNote: newFocusedNote });
+  }
+
+  onNoteRightClick = (newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void => {
+    e.preventDefault();
+    this.setState({ focusedNote: newFocusedNote });
+    this.openMenu(e.clientX, e.clientY);
+  }
+
+  onReset = (): void => {
+    window.localStorage.removeItem(this.tabsKey);
+    this.setState(this.getInitialState());
+  }
+
+  private openMenu(x: number, y: number): void {
+    this.setState({
+      menuIsOpen: true,
+      menuX: x + this.menuPixelShiftX,
+      menuY: y + this.menuPixelShiftY
+    });
+  }
+
+  private getInitialState(): IAppState {
+    return {
+      tablatureIsFocused: false,
+      chords: this.getEmptyChords(16, 6),
+      focusedNote: {
+        chordIndex: 0,
+        stringIndex: 0
+      },
+      tuning: [
+        { letter: NoteLetter.E, octave: 4 },
+        { letter: NoteLetter.B, octave: 3 },
+        { letter: NoteLetter.G, octave: 3 },
+        { letter: NoteLetter.D, octave: 3 },
+        { letter: NoteLetter.A, octave: 2 },
+        { letter: NoteLetter.E, octave: 2 },
+      ],
+      maxFretNum: 24,
+      mapFromNoteLetterEnumToString: new Map(
+        [
+          [NoteLetter.Aflat, 'Ab'],
+          [NoteLetter.A, 'A'],
+          [NoteLetter.Bflat, 'Bb'],
+          [NoteLetter.B, 'B'],
+          [NoteLetter.C, 'C'],
+          [NoteLetter.Dflat, 'C#'],
+          [NoteLetter.D, 'D'],
+          [NoteLetter.Eflat, 'Eb'],
+          [NoteLetter.E, 'E'],
+          [NoteLetter.F, 'F'],
+          [NoteLetter.Gflat, 'F#'],
+          [NoteLetter.G, 'G']
+        ]
+      ),
+      menuIsOpen: false,
+      menuX: 0,
+      menuY: 0
+    };
+  }
+
+  private getEmptyChords(numChords: number, numFrets: number): null[][] {
+    return new Array(numChords).fill(this.getAllNulls(numFrets));
+  }
+
+  private getAllNulls = (numFrets: number): null[] => {
+    return new Array(numFrets).fill(null);
+  }
+
+  private getMenuEl(): JSX.Element | null {
+    if (!this.state.menuIsOpen) {
+      return null;
+    }
+
+    return (
+      <div style={{ left: this.state.menuX, top: this.state.menuY, width: 200 }} className='note-menu'>
+        <select></select>
+        <input type='text' />
+      </div>
+    );
+  }
 }
 
-export default App;
+interface IAppProps { }
+
+interface IAppState {
+  tablatureIsFocused: boolean;
+  chords: (number | null)[][];
+  focusedNote: ITabNoteLocation;
+  tuning: INote[];
+  maxFretNum: number;
+  mapFromNoteLetterEnumToString: Map<NoteLetter, string>;
+  menuIsOpen: boolean;
+  menuX: number;
+  menuY: number;
+}

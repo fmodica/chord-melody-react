@@ -4,8 +4,8 @@ import './App.css';
 
 export default class App extends Component<IAppProps, IAppState> {
   private readonly tabsKey = 'tabs';
-  private readonly menuPixelShiftX = 10;
-  private readonly menuPixelShiftY = 10;
+  private readonly menuPixelShiftX = 15;
+  private readonly menuPixelShiftY = 15;
 
   constructor(props: IAppProps) {
     super(props);
@@ -63,6 +63,7 @@ export default class App extends Component<IAppProps, IAppState> {
 
   onNoteClick = (newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void => {
     this.setState({ focusedNote: newFocusedNote });
+    this.closeMenu();
   }
 
   onNoteRightClick = (newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void => {
@@ -76,12 +77,36 @@ export default class App extends Component<IAppProps, IAppState> {
     this.setState(this.getInitialState());
   }
 
+  onChordRootSelected = (root: string) => {
+    const rootAsNumber: NoteLetter = parseInt(root);
+    this.setState({ selectedChordRoot: rootAsNumber });
+  }
+
+  onIntervalChecked = (interval: Interval) => {
+    let intervalsCopy: Interval[];
+
+    if (this.state.selectedIntervals.includes(interval)) {
+      intervalsCopy = this.state.selectedIntervals.filter(i => i !== interval);
+    } else {
+      intervalsCopy = [interval, ...this.state.selectedIntervals];
+    }
+
+    this.setState({ selectedIntervals: intervalsCopy });
+  }
+
+  onGetChordClick = () => {
+  }
+
   private openMenu(x: number, y: number): void {
     this.setState({
       menuIsOpen: true,
       menuX: x + this.menuPixelShiftX,
       menuY: y + this.menuPixelShiftY
     });
+  }
+
+  private closeMenu(): void {
+    this.setState({ menuIsOpen: false });
   }
 
   private getInitialState(): IAppState {
@@ -117,9 +142,27 @@ export default class App extends Component<IAppProps, IAppState> {
           [NoteLetter.G, 'G']
         ]
       ),
+      mapFromIntervalEnumToString: new Map(
+        [
+          [Interval.Root, 'root'],
+          [Interval.FlatSecond, 'b2/b9'],
+          [Interval.Second, '2/9'],
+          [Interval.FlatThird, 'b3/#9'],
+          [Interval.Third, '3'],
+          [Interval.Fourth, '4/11'],
+          [Interval.FlatFifth, 'b5/#11'],
+          [Interval.Fifth, '5'],
+          [Interval.FlatSixth, 'b6/#5'],
+          [Interval.Sixth, '6/13/bb7'],
+          [Interval.FlatSeventh, 'b7'],
+          [Interval.Seventh, '7']
+        ]
+      ),
       menuIsOpen: false,
       menuX: 0,
-      menuY: 0
+      menuY: 0,
+      selectedChordRoot: NoteLetter.C,
+      selectedIntervals: [Interval.Root, Interval.Third, Interval.Fifth]
     };
   }
 
@@ -138,8 +181,36 @@ export default class App extends Component<IAppProps, IAppState> {
 
     return (
       <div style={{ left: this.state.menuX, top: this.state.menuY, width: 200 }} className='note-menu'>
-        <select></select>
-        <input type='text' />
+        {this.getChordIntervalAndNotesDisplay()}
+      </div>
+    );
+  }
+
+  private getChordIntervalAndNotesDisplay(): JSX.Element {
+    const noteLetterEntries = Array.from(this.state.mapFromNoteLetterEnumToString.entries());
+    const intervalEntries = Array.from(this.state.mapFromIntervalEnumToString.entries());
+
+    return (
+      <div>
+        <select onChange={(e) => this.onChordRootSelected(e.target.value)} value={this.state.selectedChordRoot as NoteLetter}>
+          {noteLetterEntries.map(entry => <option key={entry[0]} value={entry[0]}>{entry[1]}</option>)}
+        </select>
+        <table>
+          <tbody>
+            {
+              intervalEntries.map(entry => {
+                return (
+                  <tr key={entry[0]}>
+                    <td>{entry[1]}</td>
+                    <td><input type='checkbox' checked={this.state.selectedIntervals.includes(entry[0])} onChange={() => this.onIntervalChecked(entry[0])} /></td>
+                  </tr>
+                )
+              })
+            }
+          </tbody>
+        </table>
+
+        <button onClick={this.onGetChordClick}>Get Chords</button>
       </div>
     );
   }
@@ -154,7 +225,25 @@ interface IAppState {
   tuning: INote[];
   maxFretNum: number;
   mapFromNoteLetterEnumToString: Map<NoteLetter, string>;
+  mapFromIntervalEnumToString: Map<Interval, string>;
   menuIsOpen: boolean;
   menuX: number;
   menuY: number;
+  selectedChordRoot: NoteLetter;
+  selectedIntervals: Interval[];
+}
+
+enum Interval {
+  Root,
+  FlatSecond,
+  Second,
+  FlatThird,
+  Third,
+  Fourth,
+  FlatFifth,
+  Fifth,
+  FlatSixth,
+  Sixth,
+  FlatSeventh,
+  Seventh
 }

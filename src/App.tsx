@@ -319,9 +319,9 @@ export default class App extends Component<IAppProps, IAppState> {
         tuning={this.state.tuning}
         maxFretNum={this.state.maxFretNum}
         mapFromNoteLetterEnumToString={this.state.mapFromNoteLetterEnumToString}
-        focusedNote={this.state.focusedNote}
-        onKeyBoardNavigation={this.onKeyBoardNavigation}
-        onEdit={this.onEdit}
+        focusedNote={null}
+        onKeyBoardNavigation={() => { }}
+        onEdit={() => { }}
         onNoteClick={this.onSuggestedChordNoteClick}
         onNoteRightClick={() => { }}
       ></Tablature>

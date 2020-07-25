@@ -91,17 +91,31 @@ export default class App extends Component<IAppProps, IAppState> {
     this.openMenu(e.clientX, e.clientY);
   }
 
+  onSuggestedChordNoteClick = (newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void => {
+    if (this.state.suggestedChords === null) {
+      return;
+    }
+
+    const newChords: (number | null)[][] = [...this.state.chords];
+    const newChord: (number | null)[] = [...this.state.suggestedChords[newFocusedNote.chordIndex]];
+
+    newChords[this.state.focusedNote.chordIndex] = newChord;
+
+    this.setState({ chords: newChords });
+    this.closeMenu();
+  }
+
   onReset = (): void => {
     window.localStorage.removeItem(this.tabsKey);
     this.setState(this.getInitialState());
   }
 
-  onChordRootSelected = (root: string) => {
+  onChordRootSelected = (root: string): void => {
     const rootAsNumber: NoteLetter = parseInt(root);
     this.setState({ selectedChordRoot: rootAsNumber });
   }
 
-  onIntervalChecked = (interval: Interval) => {
+  onIntervalChecked = (interval: Interval): void => {
     let intervalsCopy: Interval[];
 
     if (this.state.selectedIntervals.includes(interval)) {
@@ -128,8 +142,6 @@ export default class App extends Component<IAppProps, IAppState> {
     const requiredNotesExcludingMelody = this.state.selectedIntervals.map(interval => {
       return this.getNoteLetterFromRootAndInterval(this.state.selectedChordRoot as NoteLetter, interval);
     });
-
-    debugger;
 
     const suggestedChords: (number | null)[][] | null = this.chordMelodyService.getChords(requiredNotesExcludingMelody, this.state.tuning, 24, melodyStringedNote, this.state.maxFretDistance);
 
@@ -298,7 +310,7 @@ export default class App extends Component<IAppProps, IAppState> {
         focusedNote={this.state.focusedNote}
         onKeyBoardNavigation={this.onKeyBoardNavigation}
         onEdit={this.onEdit}
-        onNoteClick={() => { }}
+        onNoteClick={this.onSuggestedChordNoteClick}
         onNoteRightClick={() => { }}
       ></Tablature>
     </div>

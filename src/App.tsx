@@ -247,8 +247,8 @@ export default class App extends Component<IAppProps, IAppState> {
     return new Array(numChords).fill(this.getAllNulls(numFrets));
   }
 
-  private getAllNulls = (numFrets: number): null[] => {
-    return new Array(numFrets).fill(null);
+  private getAllNulls = (size: number): null[] => {
+    return new Array(size).fill(null);
   }
 
   private getMenuEl(): JSX.Element | null {
@@ -258,38 +258,50 @@ export default class App extends Component<IAppProps, IAppState> {
 
     return (
       <div style={{ left: this.state.menuX, top: this.state.menuY, width: 200 }} className='note-menu'>
-        {this.getChordIntervalAndNotesDisplay()}
+        {this.getChordMelodyOptionsMenu()}
       </div>
     );
   }
 
-  private getChordIntervalAndNotesDisplay(): JSX.Element {
-    const noteLetterEntries = Array.from(this.state.mapFromNoteLetterEnumToString.entries());
-    const intervalEntries = Array.from(this.state.mapFromIntervalEnumToString.entries());
-
+  private getChordMelodyOptionsMenu(): JSX.Element {
     return (
       <div>
-        <select onChange={(e) => this.onChordRootSelected(e.target.value)} value={this.state.selectedChordRoot as NoteLetter}>
-          {noteLetterEntries.map(entry => <option key={entry[0]} value={entry[0]}>{entry[1]}</option>)}
-        </select>
-        <table>
-          <tbody>
-            {
-              intervalEntries.map(entry => {
-                return (
-                  <tr key={entry[0]}>
-                    <td>{entry[1]}</td>
-                    <td><input type='checkbox' checked={this.state.selectedIntervals.includes(entry[0])} onChange={() => this.onIntervalChecked(entry[0])} /></td>
-                  </tr>
-                )
-              })
-            }
-          </tbody>
-        </table>
-
+        {this.getChordMelodySelectMenu()}
+        {this.getChordMelodyIntervalsTable()}
         <button onClick={this.onGetChordsClick}>Get Chords</button>
       </div>
     );
+  }
+
+  private getChordMelodySelectMenu(): JSX.Element {
+    const noteLetterEntries = Array.from(this.state.mapFromNoteLetterEnumToString.entries());
+
+    return (
+      <select onChange={(e) => this.onChordRootSelected(e.target.value)} value={this.state.selectedChordRoot as NoteLetter}>
+        {noteLetterEntries.map(entry => <option key={entry[0]} value={entry[0]}>{entry[1]}</option>)}
+      </select>
+    );
+  }
+
+  private getChordMelodyIntervalsTable(): JSX.Element {
+    const intervalEntries = Array.from(this.state.mapFromIntervalEnumToString.entries());
+
+    return (
+      <table>
+        <tbody>
+          {
+            intervalEntries.map(entry => {
+              return (
+                <tr key={entry[0]}>
+                  <td>{entry[1]}</td>
+                  <td><input type='checkbox' checked={this.state.selectedIntervals.includes(entry[0])} onChange={() => this.onIntervalChecked(entry[0])} /></td>
+                </tr>
+              )
+            })
+          }
+        </tbody>
+      </table>
+    )
   }
 
   private getSuggestedChordsDisplay(): JSX.Element | null {

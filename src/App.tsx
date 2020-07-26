@@ -145,6 +145,10 @@ export default class App extends Component<IAppProps, IAppState> {
     this.closeMenu();
   }
 
+  onMenuClose = (): void => {
+    this.setState({ menuAnchorEl: null, menuIsOpen: false });
+  }
+
   private getSuggestedChords(): (number | null)[][] | null {
     const melodyStringedNote: IStringedNote | null = this.getFocusedNoteAsStringedNote();
 
@@ -195,7 +199,6 @@ export default class App extends Component<IAppProps, IAppState> {
 
   private getInitialState(): IAppState {
     return {
-      tablatureIsFocused: false,
       chords: this.getEmptyChords(16, 6),
       focusedNote: {
         chordIndex: 0,
@@ -264,7 +267,7 @@ export default class App extends Component<IAppProps, IAppState> {
       <Popover
         open={this.state.menuIsOpen}
         anchorEl={this.state.menuAnchorEl}
-        onClose={() => { }}
+        onClose={this.onMenuClose}
         anchorOrigin={{
           vertical: 'top',
           horizontal: 'right',
@@ -365,7 +368,6 @@ export default class App extends Component<IAppProps, IAppState> {
 interface IAppProps { }
 
 interface IAppState {
-  tablatureIsFocused: boolean;
   chords: (number | null)[][];
   focusedNote: ITabNoteLocation;
   tuning: INote[];

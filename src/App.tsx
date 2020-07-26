@@ -137,6 +137,10 @@ export default class App extends Component<IAppProps, IAppState> {
   }
 
   onGetChordsClick = (): void => {
+    if (this.state.selectedChordRoot === '' || this.state.selectedIntervals.length === 0 || this.state.focusedNote === null) {
+      return;
+    }
+
     this.setState({ suggestedChords: this.getSuggestedChords() });
     this.closeMenu();
   }
@@ -241,7 +245,7 @@ export default class App extends Component<IAppProps, IAppState> {
       menuIsOpen: false,
       menuAnchorEl: null,
       selectedChordRoot: "",
-      selectedIntervals: [Interval.Root, Interval.Third, Interval.Fifth],
+      selectedIntervals: [],
       maxFretDistance: 4,
       suggestedChords: null
     };

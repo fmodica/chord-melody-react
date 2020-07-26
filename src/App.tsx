@@ -1,6 +1,17 @@
 import React, { Component } from 'react';
 import { Tablature, ITabNoteLocation, INote, NoteLetter } from './submodules/tablature-react/src/tablature/tablature';
 import { IStringedNote, IChordMelodyService, ChordMelodyService } from './services/chord-melody-service';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
+import Table from '@material-ui/core/Table';
+import TableHead from '@material-ui/core/TableHead';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableContainer from '@material-ui/core/TableContainer';
+import TableRow from '@material-ui/core/TableRow';
+import Checkbox from '@material-ui/core/Checkbox';
+import Button from '@material-ui/core/Button';
+import Popover from '@material-ui/core/Popover';
 import './App.css';
 
 enum Interval {
@@ -20,8 +31,6 @@ enum Interval {
 
 export default class App extends Component<IAppProps, IAppState> {
   private readonly tabsKey: string = 'tabs';
-  private readonly menuPixelShiftX: number = 15;
-  private readonly menuPixelShiftY: number = 15;
   private readonly chordMelodyService: IChordMelodyService = new ChordMelodyService();
 
   constructor(props: IAppProps) {
@@ -81,13 +90,13 @@ export default class App extends Component<IAppProps, IAppState> {
   }
 
   onNoteClick = (newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void => {
-    this.setState({ focusedNote: newFocusedNote });
+    this.setState({ focusedNote: newFocusedNote, menuAnchorEl: e.target as Element });
     this.closeMenu();
   }
 
   onNoteRightClick = (newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void => {
     e.preventDefault();
-    this.setState({ focusedNote: newFocusedNote });
+    this.setState({ focusedNote: newFocusedNote, menuAnchorEl: e.target as Element });
     this.openMenu(e.clientX, e.clientY);
   }
 
@@ -101,7 +110,7 @@ export default class App extends Component<IAppProps, IAppState> {
 
     newChords[this.state.focusedNote.chordIndex] = newChord;
 
-    this.setState({ chords: newChords });
+    this.onEdit(newChords, this.state.focusedNote);
     this.closeMenu();
   }
 
@@ -110,9 +119,9 @@ export default class App extends Component<IAppProps, IAppState> {
     this.setState(this.getInitialState());
   }
 
-  onChordRootSelected = (root: string): void => {
-    const rootAsNumber: NoteLetter = parseInt(root);
-    this.setState({ selectedChordRoot: rootAsNumber });
+  onChordRootSelected = (event: React.ChangeEvent<{ value: unknown }>): void => {
+    const value: string = event.target.value as string;
+    this.setState({ selectedChordRoot: value ? parseInt(value) : "" });
   }
 
   onIntervalChecked = (interval: Interval): void => {
@@ -165,11 +174,7 @@ export default class App extends Component<IAppProps, IAppState> {
   }
 
   private openMenu(x: number, y: number): void {
-    this.setState({
-      menuIsOpen: true,
-      menuX: x + this.menuPixelShiftX,
-      menuY: y + this.menuPixelShiftY
-    });
+    this.setState({ menuIsOpen: true });
   }
 
   private closeMenu(): void {
@@ -220,23 +225,22 @@ export default class App extends Component<IAppProps, IAppState> {
       mapFromIntervalEnumToString: new Map(
         [
           [Interval.Root, 'root'],
-          [Interval.FlatSecond, 'b2/b9'],
+          [Interval.FlatSecond, 'b2 / b9'],
           [Interval.Second, '2/9'],
-          [Interval.FlatThird, 'b3/#9'],
+          [Interval.FlatThird, 'b3 / #9'],
           [Interval.Third, '3'],
-          [Interval.Fourth, '4/11'],
-          [Interval.FlatFifth, 'b5/#11'],
+          [Interval.Fourth, '4 / 11'],
+          [Interval.FlatFifth, 'b5 / #11'],
           [Interval.Fifth, '5'],
-          [Interval.FlatSixth, 'b6/#5'],
-          [Interval.Sixth, '6/13/bb7'],
+          [Interval.FlatSixth, 'b6 / #5'],
+          [Interval.Sixth, '6 / 13 / bb7'],
           [Interval.FlatSeventh, 'b7'],
           [Interval.Seventh, '7']
         ]
       ),
       menuIsOpen: false,
-      menuX: 0,
-      menuY: 0,
-      selectedChordRoot: NoteLetter.C,
+      menuAnchorEl: null,
+      selectedChordRoot: "",
       selectedIntervals: [Interval.Root, Interval.Third, Interval.Fifth],
       maxFretDistance: 4,
       suggestedChords: null
@@ -252,14 +256,23 @@ export default class App extends Component<IAppProps, IAppState> {
   }
 
   private getMenuEl(): JSX.Element | null {
-    if (!this.state.menuIsOpen) {
-      return null;
-    }
-
     return (
-      <div style={{ left: this.state.menuX, top: this.state.menuY, width: 200 }} className='note-menu'>
-        {this.getChordMelodyOptionsMenu()}
-      </div>
+      <Popover
+        open={this.state.menuIsOpen}
+        anchorEl={this.state.menuAnchorEl}
+        onClose={() => { }}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}>
+        <div className='note-menu'>
+          {this.getChordMelodyOptionsMenu()}
+        </div>
+      </Popover>
     );
   }
 
@@ -268,7 +281,7 @@ export default class App extends Component<IAppProps, IAppState> {
       <div>
         {this.getChordMelodySelectMenu()}
         {this.getChordMelodyIntervalsTable()}
-        <button onClick={this.onGetChordsClick}>Get Chords</button>
+        <Button variant="contained" color="primary" onClick={this.onGetChordsClick}>Get Chords</Button>
       </div>
     );
   }
@@ -277,9 +290,16 @@ export default class App extends Component<IAppProps, IAppState> {
     const noteLetterEntries = Array.from(this.state.mapFromNoteLetterEnumToString.entries());
 
     return (
-      <select onChange={(e) => this.onChordRootSelected(e.target.value)} value={this.state.selectedChordRoot as NoteLetter}>
-        {noteLetterEntries.map(entry => <option key={entry[0]} value={entry[0]}>{entry[1]}</option>)}
-      </select>
+      <Select className="chord-root-menu" onChange={this.onChordRootSelected} value={this.state.selectedChordRoot} displayEmpty={true}>
+        <MenuItem value="">
+          <em>Chord Root</em>
+        </MenuItem>
+        {
+          noteLetterEntries.map(entry => {
+            return <MenuItem key={entry[0]} value={entry[0]}>{entry[1]}</MenuItem>;
+          })
+        }
+      </Select>
     );
   }
 
@@ -287,20 +307,29 @@ export default class App extends Component<IAppProps, IAppState> {
     const intervalEntries = Array.from(this.state.mapFromIntervalEnumToString.entries());
 
     return (
-      <table>
-        <tbody>
-          {
-            intervalEntries.map(entry => {
-              return (
-                <tr key={entry[0]}>
-                  <td>{entry[1]}</td>
-                  <td><input type='checkbox' checked={this.state.selectedIntervals.includes(entry[0])} onChange={() => this.onIntervalChecked(entry[0])} /></td>
-                </tr>
-              )
-            })
-          }
-        </tbody>
-      </table>
+      <TableContainer>
+        <Table>
+          <TableBody>
+            {
+              intervalEntries.map(entry => {
+                return (
+                  <TableRow key={entry[0]}>
+                    <TableCell padding='default'>
+                      {entry[1]}
+                    </TableCell>
+                    <TableCell padding='checkbox'>
+                      <Checkbox
+                        color="primary"
+                        checked={this.state.selectedIntervals.includes(entry[0])}
+                        onChange={() => this.onIntervalChecked(entry[0])} />
+                    </ TableCell>
+                  </TableRow>
+                )
+              })
+            }
+          </TableBody>
+        </Table>
+      </TableContainer>
     )
   }
 
@@ -340,9 +369,8 @@ interface IAppState {
   mapFromNoteLetterEnumToString: Map<NoteLetter, string>;
   mapFromIntervalEnumToString: Map<Interval, string>;
   menuIsOpen: boolean;
-  menuX: number;
-  menuY: number;
-  selectedChordRoot: NoteLetter;
+  menuAnchorEl: Element | null;
+  selectedChordRoot: NoteLetter | "";
   selectedIntervals: Interval[];
   maxFretDistance: number;
   // If null, we are not currently suggesting chords.

@@ -9,14 +9,6 @@
   cursor: pointer;
 }
 
-.app .note-menu {
-  position: fixed;
-  border: 1px solid black;
-  padding: 10px;
-  background: white;
-}
-
-.app .note-menu select,
-.app .note-menu input {
+.note-menu .chord-root-menu {
   width: 100%;
 }

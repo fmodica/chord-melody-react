@@ -9,6 +9,29 @@
   cursor: pointer;
 }
 
+.note-menu {
+  padding: 5px;
+  width: 165px;
+}
+
 .note-menu .chord-root-menu {
+  width: 100%;
+}
+
+.note-menu .MuiFormControl-root {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.note-menu .MuiTableContainer-root {
+  margin-bottom: 20px;
+}
+
+.note-menu .MuiTableContainer-root label {
+  border-bottom: 1px solid rgba(224, 224, 224, 1);
+  padding-bottom: 12px;
+}
+
+.note-menu .MuiButtonBase-root {
   width: 100%;
 }

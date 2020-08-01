@@ -1,11 +1,14 @@
 import React, { Component } from 'react';
 import { Tablature, ITabNoteLocation, INote, NoteLetter } from './submodules/tablature-react/src/tablature/tablature';
 import { IStringedNote, IChordMelodyService, ChordMelodyService } from './services/chord-melody-service';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
+import FormHelperText from '@material-ui/core/FormHelperText';
 import MenuItem from '@material-ui/core/MenuItem';
 import Table from '@material-ui/core/Table';
-import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
+import TableHead from '@material-ui/core/TableHead';
 import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableRow from '@material-ui/core/TableRow';
@@ -120,26 +123,45 @@ export default class App extends Component<IAppProps, IAppState> {
   }
 
   onChordRootSelected = (event: React.ChangeEvent<{ value: unknown }>): void => {
-    const value: string = event.target.value as string;
-    this.setState({ selectedChordRoot: value ? parseInt(value) : "" });
+    const valueAsString: string | null = event.target.value as string | null;
+    const valueParsed: number | null = valueAsString === null ? null : parseInt(valueAsString);
+
+    this.setState({
+      selectedChordRoot: valueParsed,
+      hasChordRootError: false
+    });
   }
 
   onIntervalChecked = (interval: Interval): void => {
-    let intervalsCopy: Interval[];
+    let newIntervals: Interval[];
 
     if (this.state.selectedIntervals.includes(interval)) {
-      intervalsCopy = this.state.selectedIntervals.filter(i => i !== interval);
+      newIntervals = this.state.selectedIntervals.filter(i => i !== interval);
     } else {
-      intervalsCopy = [interval, ...this.state.selectedIntervals];
+      newIntervals = [interval, ...this.state.selectedIntervals];
     }
 
-    this.setState({ selectedIntervals: intervalsCopy });
+    this.setState({
+      selectedIntervals: newIntervals,
+      hasSelectedIntervalError: false
+    });
   }
 
   onGetChordsClick = (): void => {
-    if (this.state.selectedChordRoot === '' || this.state.selectedIntervals.length === 0 || this.state.focusedNote === null) {
+    if (this.state.selectedChordRoot === null) {
+      this.setState({ hasChordRootError: true });
       return;
     }
+
+    if (this.state.selectedIntervals.length === 0) {
+      this.setState({ hasSelectedIntervalError: true });
+      return;
+    }
+
+    if (this.state.focusedNote === null) {
+      return;
+    }
+
 
     this.setState({ suggestedChords: this.getSuggestedChords() });
     this.closeMenu();
@@ -247,8 +269,10 @@ export default class App extends Component<IAppProps, IAppState> {
       ),
       menuIsOpen: false,
       menuAnchorEl: null,
-      selectedChordRoot: "",
+      selectedChordRoot: null,
+      hasChordRootError: false,
       selectedIntervals: [],
+      hasSelectedIntervalError: false,
       maxFretDistance: 4,
       suggestedChords: null
     };
@@ -276,16 +300,15 @@ export default class App extends Component<IAppProps, IAppState> {
           vertical: 'top',
           horizontal: 'left',
         }}>
-        <div className='note-menu'>
-          {this.getChordMelodyOptionsMenu()}
-        </div>
+
+        {this.getChordMelodyOptionsMenu()}
       </Popover>
     );
   }
 
   private getChordMelodyOptionsMenu(): JSX.Element {
     return (
-      <div>
+      <div className='note-menu'>
         {this.getChordMelodySelectMenu()}
         {this.getChordMelodyIntervalsTable()}
         <Button variant="contained" color="primary" onClick={this.onGetChordsClick}>Get Chords</Button>
@@ -297,16 +320,17 @@ export default class App extends Component<IAppProps, IAppState> {
     const noteLetterEntries = Array.from(this.state.mapFromNoteLetterEnumToString.entries());
 
     return (
-      <Select className="chord-root-menu" onChange={this.onChordRootSelected} value={this.state.selectedChordRoot} displayEmpty={true}>
-        <MenuItem value="">
-          <em>Chord Root</em>
-        </MenuItem>
-        {
-          noteLetterEntries.map(entry => {
-            return <MenuItem key={entry[0]} value={entry[0]}>{entry[1]}</MenuItem>;
-          })
-        }
-      </Select>
+      <FormControl error={this.state.hasChordRootError}>
+        <InputLabel>Chord Root</InputLabel>
+        <Select className="chord-root-menu" onChange={this.onChordRootSelected} value={this.state.selectedChordRoot}>
+          {
+            noteLetterEntries.map(entry => {
+              return <MenuItem key={entry[0]} value={entry[0]}>{entry[1]}</MenuItem>;
+            })
+          }
+        </Select>
+        {this.state.hasChordRootError && <FormHelperText>A chord root is required</FormHelperText>}
+      </FormControl>
     );
   }
 
@@ -314,29 +338,39 @@ export default class App extends Component<IAppProps, IAppState> {
     const intervalEntries = Array.from(this.state.mapFromIntervalEnumToString.entries());
 
     return (
-      <TableContainer>
-        <Table>
-          <TableBody>
-            {
-              intervalEntries.map(entry => {
-                return (
-                  <TableRow key={entry[0]}>
-                    <TableCell padding='default'>
-                      {entry[1]}
-                    </TableCell>
-                    <TableCell padding='checkbox'>
-                      <Checkbox
-                        color="primary"
-                        checked={this.state.selectedIntervals.includes(entry[0])}
-                        onChange={() => this.onIntervalChecked(entry[0])} />
-                    </ TableCell>
-                  </TableRow>
-                )
-              })
-            }
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <FormControl error={this.state.hasSelectedIntervalError}>
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>
+                  Interval
+              </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {
+                intervalEntries.map(entry => {
+                  return (
+                    <TableRow key={entry[0]}>
+                      <TableCell padding='default'>
+                        {entry[1]}
+                      </TableCell>
+                      <TableCell padding='checkbox'>
+                        <Checkbox
+                          color="primary"
+                          checked={this.state.selectedIntervals.includes(entry[0])}
+                          onChange={() => this.onIntervalChecked(entry[0])} />
+                      </ TableCell>
+                    </TableRow>
+                  )
+                })
+              }
+            </TableBody>
+          </Table>
+        </TableContainer>
+        {this.state.hasSelectedIntervalError && <FormHelperText>At least one interval must be selected</FormHelperText>}
+      </FormControl>
     )
   }
 
@@ -376,8 +410,10 @@ interface IAppState {
   mapFromIntervalEnumToString: Map<Interval, string>;
   menuIsOpen: boolean;
   menuAnchorEl: Element | null;
-  selectedChordRoot: NoteLetter | "";
+  selectedChordRoot: NoteLetter | null;
+  hasChordRootError: boolean;
   selectedIntervals: Interval[];
+  hasSelectedIntervalError: boolean;
   maxFretDistance: number;
   // If null, we are not currently suggesting chords.
   // If empty, we are suggesting chords but there are none.

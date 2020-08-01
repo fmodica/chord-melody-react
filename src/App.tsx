@@ -190,9 +190,11 @@ export default class App extends Component<IAppProps, IAppState> {
 
     const suggestedChords: (number | null)[][] | null = this.chordMelodyService.getChords(requiredNotesExcludingMelody, this.state.tuning, 24, melodyStringedNote, this.state.maxFretDistance);
 
-    suggestedChords.sort((a, b) => {
+    const suggestedChordsRequiringFourFingersMax = suggestedChords.filter(chord => this.chordPlayabilityService.getPlayability(chord) <= 4);
+
+    suggestedChordsRequiringFourFingersMax.sort((a, b) => {
       // Sort by playability 
-      
+
       const playabilityA = this.chordPlayabilityService.getPlayability(a);
       const playabilityB = this.chordPlayabilityService.getPlayability(b);
 
@@ -220,7 +222,7 @@ export default class App extends Component<IAppProps, IAppState> {
       return minNonZeroFretA - minNonZeroFretB;
     });
 
-    return suggestedChords;
+    return suggestedChordsRequiringFourFingersMax;
   }
 
   private getFocusedNoteAsStringedNote(): IStringedNote | null {

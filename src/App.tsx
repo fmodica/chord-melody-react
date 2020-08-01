@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
-import { Tablature, ITabNoteLocation, INote, NoteLetter } from './submodules/tablature-react/src/tablature/tablature';
-import { IStringedNote, IChordMelodyService, ChordMelodyService } from './services/chord-melody-service';
+
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
@@ -15,7 +14,13 @@ import TableRow from '@material-ui/core/TableRow';
 import Checkbox from '@material-ui/core/Checkbox';
 import Button from '@material-ui/core/Button';
 import Popover from '@material-ui/core/Popover';
+
+import { Tablature, ITabNoteLocation, INote, NoteLetter } from './submodules/tablature-react/src/tablature/tablature';
+import { IStringedNote, IChordMelodyService, ChordMelodyService } from './services/chord-melody-service';
+import { ChordPlayabilityService, IChordPlayabilityService } from './services/chord-playability-service';
+
 import './App.css';
+import { ArrayUtilities } from './services/array-utilities';
 
 enum Interval {
   Root,
@@ -35,6 +40,7 @@ enum Interval {
 export default class App extends Component<IAppProps, IAppState> {
   private readonly tabsKey: string = 'tabs';
   private readonly chordMelodyService: IChordMelodyService = new ChordMelodyService();
+  private readonly chordPlayabilityService: IChordPlayabilityService = new ChordPlayabilityService();
 
   constructor(props: IAppProps) {
     super(props);
@@ -183,6 +189,36 @@ export default class App extends Component<IAppProps, IAppState> {
     });
 
     const suggestedChords: (number | null)[][] | null = this.chordMelodyService.getChords(requiredNotesExcludingMelody, this.state.tuning, 24, melodyStringedNote, this.state.maxFretDistance);
+
+    suggestedChords.sort((a, b) => {
+      // Sort by playability 
+      
+      const playabilityA = this.chordPlayabilityService.getPlayability(a);
+      const playabilityB = this.chordPlayabilityService.getPlayability(b);
+
+      if (playabilityA !== playabilityB) {
+        return playabilityA - playabilityB;
+      }
+
+      // Same playability, sort by number of notes
+
+      const aWithoutNulls = a.filter(fret => fret !== null);
+      const bWithoutNulls = b.filter(fret => fret !== null);
+
+      if (aWithoutNulls.length !== bWithoutNulls.length) {
+        return aWithoutNulls.length - bWithoutNulls.length;
+      }
+
+      // Same number of notes, sort by minimum non-zero fret
+
+      const aWithoutNullsOrOpens = aWithoutNulls.filter(fret => fret !== 0);
+      const bWithoutNullsOrOpens = bWithoutNulls.filter(fret => fret !== 0);
+
+      const { min: minNonZeroFretA } = ArrayUtilities.getMinMax(aWithoutNullsOrOpens as number[]);
+      const { min: minNonZeroFretB } = ArrayUtilities.getMinMax(bWithoutNullsOrOpens as number[]);
+
+      return minNonZeroFretA - minNonZeroFretB;
+    });
 
     return suggestedChords;
   }

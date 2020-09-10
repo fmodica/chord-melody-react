@@ -54,6 +54,7 @@ export default class App extends Component<IAppProps, IAppState> {
         <button className='reset-btn' onClick={this.onReset}>Reset</button>
 
         <Tablature
+          editorIsFocused={this.state.editorIsFocused}
           chords={this.state.chords}
           tuning={this.state.tuning}
           maxFretNum={this.state.maxFretNum}
@@ -63,6 +64,7 @@ export default class App extends Component<IAppProps, IAppState> {
           onEdit={this.onEdit}
           onNoteClick={this.onNoteClick}
           onNoteRightClick={this.onNoteRightClick}
+          onEditorFocus={this.onEditorFocus}
         ></Tablature>
 
         {this.getMenuEl()}
@@ -107,6 +109,10 @@ export default class App extends Component<IAppProps, IAppState> {
     e.preventDefault();
     this.setState({ focusedNote: newFocusedNote, menuAnchorEl: e.target as Element });
     this.openMenu(e.clientX, e.clientY);
+  }
+
+  onEditorFocus = (isFocused: boolean, e: React.FocusEvent): void => {
+    this.setState({ editorIsFocused: isFocused });
   }
 
   onSuggestedChordNoteClick = (newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void => {
@@ -259,6 +265,7 @@ export default class App extends Component<IAppProps, IAppState> {
 
   private getInitialState(): IAppState {
     return {
+      editorIsFocused: true,
       chords: this.getEmptyChords(16, 6),
       focusedNote: {
         chordIndex: 0,
@@ -423,6 +430,7 @@ export default class App extends Component<IAppProps, IAppState> {
 
     return <div className='Suggested-Chords'>
       <Tablature
+        editorIsFocused={false}
         chords={this.state.suggestedChords}
         tuning={this.state.tuning}
         maxFretNum={this.state.maxFretNum}
@@ -432,6 +440,7 @@ export default class App extends Component<IAppProps, IAppState> {
         onEdit={() => { }}
         onNoteClick={this.onSuggestedChordNoteClick}
         onNoteRightClick={() => { }}
+        onEditorFocus={() => { }}
       ></Tablature>
     </div>
   }
@@ -440,6 +449,7 @@ export default class App extends Component<IAppProps, IAppState> {
 interface IAppProps { }
 
 interface IAppState {
+  editorIsFocused: boolean;
   chords: (number | null)[][];
   focusedNote: ITabNoteLocation;
   tuning: INote[];

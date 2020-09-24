@@ -277,7 +277,7 @@ export default class App extends Component<IAppProps, IAppState> {
         { letter: NoteLetter.G, octave: 3 },
         { letter: NoteLetter.D, octave: 3 },
         { letter: NoteLetter.A, octave: 2 },
-        { letter: NoteLetter.E, octave: 2 },
+        { letter: NoteLetter.E, octave: 2 }
       ],
       maxFretNum: 24,
       mapFromNoteLetterEnumToString: new Map(
@@ -367,7 +367,7 @@ export default class App extends Component<IAppProps, IAppState> {
     return (
       <FormControl error={this.state.hasChordRootError}>
         <InputLabel>Chord Root</InputLabel>
-        <Select className="chord-root-menu" onChange={this.onChordRootSelected} value={this.state.selectedChordRoot}>
+        <Select className="chord-root-menu" onChange={this.onChordRootSelected} value={this.state.selectedChordRoot === null ? '' : this.state.selectedChordRoot}>
           {
             noteLetterEntries.map(entry => {
               return <MenuItem key={entry[0]} value={entry[0]}>{entry[1]}</MenuItem>;

@@ -355,8 +355,18 @@ export default class App extends Component<IAppProps, IAppState> {
     return (
       <div className='note-menu'>
         {this.getChordMelodySelectMenu()}
-        {this.getChordMelodyIntervalsTable()}
-        <Button variant="contained" color="primary" onClick={this.onGetChordsClick}>Get Chords</Button>
+
+        {
+          this.state.selectedChordRoot === null ?
+            null :
+            this.getChordMelodyIntervalsTable()
+        }
+        
+        {
+          this.state.selectedIntervals.length === 0 ?
+            null :
+            <Button variant="contained" color="primary" onClick={this.onGetChordsClick}>Get Chords</Button>
+        }
       </div>
     );
   }
@@ -366,7 +376,8 @@ export default class App extends Component<IAppProps, IAppState> {
 
     return (
       <FormControl error={this.state.hasChordRootError}>
-        <InputLabel>Chord Root</InputLabel>
+        <FormHelperText>Let's build a chord under this melody node.</FormHelperText>
+        <FormHelperText>First select a chord root.</FormHelperText>
         <Select className="chord-root-menu" onChange={this.onChordRootSelected} value={this.state.selectedChordRoot === null ? '' : this.state.selectedChordRoot}>
           {
             noteLetterEntries.map(entry => {

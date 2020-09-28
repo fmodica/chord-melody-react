@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 
 import FormControl from '@material-ui/core/FormControl';
-import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -138,10 +137,7 @@ export default class App extends Component<IAppProps, IAppState> {
     const valueAsString: string | null = event.target.value as string | null;
     const valueParsed: number | null = valueAsString === null ? null : parseInt(valueAsString);
 
-    this.setState({
-      selectedChordRoot: valueParsed,
-      hasChordRootError: false
-    });
+    this.setState({ selectedChordRoot: valueParsed });
   }
 
   onIntervalChecked = (interval: Interval): void => {
@@ -153,27 +149,13 @@ export default class App extends Component<IAppProps, IAppState> {
       newIntervals = [interval, ...this.state.selectedIntervals];
     }
 
-    this.setState({
-      selectedIntervals: newIntervals,
-      hasSelectedIntervalError: false
-    });
+    this.setState({ selectedIntervals: newIntervals });
   }
 
   onGetChordsClick = (): void => {
-    if (this.state.selectedChordRoot === null) {
-      this.setState({ hasChordRootError: true });
-      return;
-    }
-
-    if (this.state.selectedIntervals.length === 0) {
-      this.setState({ hasSelectedIntervalError: true });
-      return;
-    }
-
     if (this.state.focusedNote === null) {
       return;
     }
-
 
     this.setState({ suggestedChords: this.getSuggestedChords() });
     this.closeMenu();
@@ -315,9 +297,7 @@ export default class App extends Component<IAppProps, IAppState> {
       menuIsOpen: false,
       menuAnchorEl: null,
       selectedChordRoot: null,
-      hasChordRootError: false,
       selectedIntervals: [],
-      hasSelectedIntervalError: false,
       maxFretDistance: 4,
       suggestedChords: null
     };
@@ -375,7 +355,7 @@ export default class App extends Component<IAppProps, IAppState> {
     const noteLetterEntries = Array.from(this.state.mapFromNoteLetterEnumToString.entries());
 
     return (
-      <FormControl error={this.state.hasChordRootError} variant='outlined'>
+      <FormControl variant='outlined'>
         <FormHelperText>Let's build a chord under this melody node.</FormHelperText>
         <FormHelperText>First select a chord root.</FormHelperText>
         <Select className='chord-root-menu' onChange={this.onChordRootSelected} value={this.state.selectedChordRoot === null ? '' : this.state.selectedChordRoot}>
@@ -385,7 +365,6 @@ export default class App extends Component<IAppProps, IAppState> {
             })
           }
         </Select>
-        {this.state.hasChordRootError && <FormHelperText>A chord root is required</FormHelperText>}
       </FormControl>
     );
   }
@@ -394,7 +373,7 @@ export default class App extends Component<IAppProps, IAppState> {
     const intervalEntries = Array.from(this.state.mapFromIntervalEnumToString.entries());
 
     return (
-      <FormControl error={this.state.hasSelectedIntervalError}>
+      <FormControl>
         <FormHelperText>Now select the chord intervals.</FormHelperText>
         <TableContainer>
           <Table size='small' padding='none'>
@@ -433,7 +412,6 @@ export default class App extends Component<IAppProps, IAppState> {
             </TableBody>
           </Table>
         </TableContainer>
-        {this.state.hasSelectedIntervalError && <FormHelperText>At least one interval must be selected</FormHelperText>}
       </FormControl>
     )
   }
@@ -478,9 +456,7 @@ interface IAppState {
   menuIsOpen: boolean;
   menuAnchorEl: Element | null;
   selectedChordRoot: NoteLetter | null;
-  hasChordRootError: boolean;
   selectedIntervals: Interval[];
-  hasSelectedIntervalError: boolean;
   maxFretDistance: number;
   // If null, we are not currently suggesting chords.
   // If empty, we are suggesting chords but there are none.

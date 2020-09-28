@@ -50,7 +50,7 @@ export default class App extends Component<IAppProps, IAppState> {
 
   render(): JSX.Element {
     return (
-      <div className="app">
+      <div className='app'>
         <button className='reset-btn' onClick={this.onReset}>Reset</button>
 
         <Tablature
@@ -361,11 +361,11 @@ export default class App extends Component<IAppProps, IAppState> {
             null :
             this.getChordMelodyIntervalsTable()
         }
-        
+
         {
           this.state.selectedIntervals.length === 0 ?
             null :
-            <Button variant="contained" color="primary" onClick={this.onGetChordsClick}>Get Chords</Button>
+            <Button variant='contained' color='primary' onClick={this.onGetChordsClick}>Get Chords</Button>
         }
       </div>
     );
@@ -375,10 +375,10 @@ export default class App extends Component<IAppProps, IAppState> {
     const noteLetterEntries = Array.from(this.state.mapFromNoteLetterEnumToString.entries());
 
     return (
-      <FormControl error={this.state.hasChordRootError}>
+      <FormControl error={this.state.hasChordRootError} variant='outlined'>
         <FormHelperText>Let's build a chord under this melody node.</FormHelperText>
         <FormHelperText>First select a chord root.</FormHelperText>
-        <Select className="chord-root-menu" onChange={this.onChordRootSelected} value={this.state.selectedChordRoot === null ? '' : this.state.selectedChordRoot}>
+        <Select className='chord-root-menu' onChange={this.onChordRootSelected} value={this.state.selectedChordRoot === null ? '' : this.state.selectedChordRoot}>
           {
             noteLetterEntries.map(entry => {
               return <MenuItem key={entry[0]} value={entry[0]}>{entry[1]}</MenuItem>;
@@ -395,13 +395,17 @@ export default class App extends Component<IAppProps, IAppState> {
 
     return (
       <FormControl error={this.state.hasSelectedIntervalError}>
+        <FormHelperText>Now select the chord intervals.</FormHelperText>
         <TableContainer>
-          <Table size="small">
+          <Table size='small' padding='none'>
             <TableHead>
               <TableRow>
-                <TableCell>
+                <TableCell padding='none'>
                   Interval
-              </TableCell>
+                </TableCell>
+                <TableCell padding='none'>
+                  Optional?
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -409,15 +413,19 @@ export default class App extends Component<IAppProps, IAppState> {
                 intervalEntries.map(entry => {
                   return (
                     <TableRow key={entry[0]}>
-                      <TableCell padding='default'>
-                        {entry[1]}
-                      </TableCell>
-                      <TableCell padding='checkbox'>
+                      <TableCell padding='none' size='small'>
                         <Checkbox
-                          color="primary"
+                          size='small'
+                          color='primary'
                           checked={this.state.selectedIntervals.includes(entry[0])}
                           onChange={() => this.onIntervalChecked(entry[0])} />
-                      </ TableCell>
+                        <label>{entry[1]}</label>
+                      </TableCell>
+                      <TableCell padding='none' size='small'>
+                        <Checkbox
+                          size='small'
+                          color='primary' />
+                      </TableCell>
                     </TableRow>
                   )
                 })

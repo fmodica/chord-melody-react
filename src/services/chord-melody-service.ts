@@ -175,6 +175,26 @@ export interface INote {
   octave: number;
 }
 
+export enum Interval {
+  Root,
+  FlatSecond,
+  Second,
+  FlatThird,
+  Third,
+  Fourth,
+  FlatFifth,
+  Fifth,
+  FlatSixth,
+  Sixth,
+  FlatSeventh,
+  Seventh
+}
+
+export interface IIntervalOptionalPair {
+  interval: Interval;
+  isOptional: boolean;
+}
+
 export interface IChordMelodyService {
   getChords(
     requiredNotes: NoteLetter[],

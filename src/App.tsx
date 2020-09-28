@@ -15,26 +15,11 @@ import Button from '@material-ui/core/Button';
 import Popover from '@material-ui/core/Popover';
 
 import { Tablature, ITabNoteLocation, INote, NoteLetter } from './submodules/tablature-react/src/tablature/tablature';
-import { IStringedNote, IChordMelodyService, ChordMelodyService } from './services/chord-melody-service';
+import { IStringedNote, Interval, IIntervalOptionalPair, IChordMelodyService, ChordMelodyService } from './services/chord-melody-service';
 import { ChordPlayabilityService, IChordPlayabilityService } from './services/chord-playability-service';
 
 import './App.css';
 import { ArrayUtilities } from './services/array-utilities';
-
-enum Interval {
-  Root,
-  FlatSecond,
-  Second,
-  FlatThird,
-  Third,
-  Fourth,
-  FlatFifth,
-  Fifth,
-  FlatSixth,
-  Sixth,
-  FlatSeventh,
-  Seventh
-}
 
 export default class App extends Component<IAppProps, IAppState> {
   private readonly tabsKey: string = 'tabs';
@@ -140,16 +125,27 @@ export default class App extends Component<IAppProps, IAppState> {
     this.setState({ selectedChordRoot: valueParsed });
   }
 
-  onIntervalChecked = (interval: Interval): void => {
-    let newIntervals: Interval[];
+  onIntervalChecked = (interval: Interval, indexOfSelectedInterval: number): void => {
+    let newIntervalOptionalPairs: IIntervalOptionalPair[] = [...this.state.selectedIntervalOptionalPairs];
 
-    if (this.state.selectedIntervals.includes(interval)) {
-      newIntervals = this.state.selectedIntervals.filter(i => i !== interval);
+    if (indexOfSelectedInterval !== -1) {
+      newIntervalOptionalPairs.splice(indexOfSelectedInterval, 1);
     } else {
-      newIntervals = [interval, ...this.state.selectedIntervals];
+      newIntervalOptionalPairs.push({ interval: interval, isOptional: false });
     }
 
-    this.setState({ selectedIntervals: newIntervals });
+    this.setState({ selectedIntervalOptionalPairs: newIntervalOptionalPairs });
+  }
+
+  onIntervalOptionalChecked = (interval: Interval, indexOfSelectedInterval: number): void => {
+    if (indexOfSelectedInterval === -1) {
+      return;
+    }
+
+    let newIntervalOptionalPairs: IIntervalOptionalPair[] = [...this.state.selectedIntervalOptionalPairs];
+    newIntervalOptionalPairs[indexOfSelectedInterval].isOptional = !newIntervalOptionalPairs[indexOfSelectedInterval].isOptional;
+
+    this.setState({ selectedIntervalOptionalPairs: newIntervalOptionalPairs });
   }
 
   onGetChordsClick = (): void => {
@@ -172,8 +168,8 @@ export default class App extends Component<IAppProps, IAppState> {
       return null;
     }
 
-    const requiredNotesExcludingMelody = this.state.selectedIntervals.map(interval => {
-      return this.getNoteLetterFromRootAndInterval(this.state.selectedChordRoot as NoteLetter, interval);
+    const requiredNotesExcludingMelody = this.state.selectedIntervalOptionalPairs.map(intervalOptionalPair => {
+      return this.getNoteLetterFromRootAndInterval(this.state.selectedChordRoot as NoteLetter, intervalOptionalPair.interval);
     });
 
     const suggestedChords: (number | null)[][] | null = this.chordMelodyService.getChords(requiredNotesExcludingMelody, this.state.tuning, 24, melodyStringedNote, this.state.maxFretDistance);
@@ -297,7 +293,7 @@ export default class App extends Component<IAppProps, IAppState> {
       menuIsOpen: false,
       menuAnchorEl: null,
       selectedChordRoot: null,
-      selectedIntervals: [],
+      selectedIntervalOptionalPairs: [],
       maxFretDistance: 4,
       suggestedChords: null
     };
@@ -343,7 +339,7 @@ export default class App extends Component<IAppProps, IAppState> {
         }
 
         {
-          this.state.selectedIntervals.length === 0 ?
+          this.state.selectedIntervalOptionalPairs.length === 0 ?
             null :
             <Button variant='contained' color='primary' onClick={this.onGetChordsClick}>Get Chords</Button>
         }
@@ -390,20 +386,25 @@ export default class App extends Component<IAppProps, IAppState> {
             <TableBody>
               {
                 intervalEntries.map(entry => {
+                  const indexOfSelectedInterval: number = this.state.selectedIntervalOptionalPairs.findIndex(x => x.interval === entry[0]);
+
                   return (
                     <TableRow key={entry[0]}>
                       <TableCell padding='none' size='small'>
                         <Checkbox
                           size='small'
                           color='primary'
-                          checked={this.state.selectedIntervals.includes(entry[0])}
-                          onChange={() => this.onIntervalChecked(entry[0])} />
+                          checked={indexOfSelectedInterval !== -1}
+                          onChange={() => this.onIntervalChecked(entry[0], indexOfSelectedInterval)} />
                         <label>{entry[1]}</label>
                       </TableCell>
                       <TableCell padding='none' size='small'>
                         <Checkbox
                           size='small'
-                          color='primary' />
+                          color='primary'
+                          disabled={indexOfSelectedInterval === -1}
+                          checked={indexOfSelectedInterval !== -1 && this.state.selectedIntervalOptionalPairs[indexOfSelectedInterval].isOptional}
+                          onChange={() => this.onIntervalOptionalChecked(entry[0], indexOfSelectedInterval)} />
                       </TableCell>
                     </TableRow>
                   )
@@ -456,7 +457,7 @@ interface IAppState {
   menuIsOpen: boolean;
   menuAnchorEl: Element | null;
   selectedChordRoot: NoteLetter | null;
-  selectedIntervals: Interval[];
+  selectedIntervalOptionalPairs: IIntervalOptionalPair[];
   maxFretDistance: number;
   // If null, we are not currently suggesting chords.
   // If empty, we are suggesting chords but there are none.

@@ -335,16 +335,14 @@ export default class App extends Component<IAppProps, IAppState> {
         {
           this.state.selectedChordRoot === null ?
             null :
-            this.getChordMelodyIntervalsTable()
-        }
-
-        {
-          this.state.selectedIntervalOptionalPairs.length === 0 ?
-            null :
-            <Button variant='contained' color='primary' onClick={this.onGetChordsClick}>Get Chords</Button>
+            [this.getChordMelodyIntervalsTable(), this.getSubmitButton()]
         }
       </div>
     );
+  }
+
+  private getSubmitButton(): JSX.Element {
+    return <Button variant='contained' color='primary' disabled={this.state.selectedIntervalOptionalPairs.length === 0} onClick={this.onGetChordsClick}>Get Chords</Button>;
   }
 
   private getChordMelodySelectMenu(): JSX.Element {

@@ -13,6 +13,7 @@ import TableRow from '@material-ui/core/TableRow';
 import Checkbox from '@material-ui/core/Checkbox';
 import Button from '@material-ui/core/Button';
 import Popover from '@material-ui/core/Popover';
+import Draggable from 'react-draggable';
 
 import { Tablature, ITabNoteLocation, INote, NoteLetter } from './submodules/tablature-react/src/tablature/tablature';
 import { IStringedNote, Interval, IIntervalOptionalPair, IChordMelodyService, ChordMelodyService } from './services/chord-melody-service';
@@ -20,7 +21,6 @@ import { ChordPlayabilityService, IChordPlayabilityService } from './services/ch
 
 import './App.css';
 import { ArrayUtilities } from './services/array-utilities';
-
 export default class App extends Component<IAppProps, IAppState> {
   private readonly tabsKey: string = 'tabs';
   private readonly chordMelodyService: IChordMelodyService = new ChordMelodyService();
@@ -35,7 +35,7 @@ export default class App extends Component<IAppProps, IAppState> {
   render(): JSX.Element {
     return (
       <div className='app'>
-        <button className='reset-btn' onClick={this.onReset}>Reset</button>
+        <Button className='reset-btn' variant='contained' color='secondary' onClick={this.onReset}>Start Over</Button>
 
         <Tablature
           editorIsFocused={this.state.editorIsFocused}
@@ -52,8 +52,6 @@ export default class App extends Component<IAppProps, IAppState> {
         ></Tablature>
 
         {this.getMenuEl()}
-
-        {this.getSuggestedChordsDisplay()}
       </div>
     );
   }
@@ -110,7 +108,6 @@ export default class App extends Component<IAppProps, IAppState> {
     newChords[this.state.focusedNote.chordIndex] = newChord;
 
     this.onEdit(newChords, this.state.focusedNote);
-    this.closeMenu();
   }
 
   onReset = (): void => {
@@ -154,11 +151,11 @@ export default class App extends Component<IAppProps, IAppState> {
     }
 
     this.setState({ suggestedChords: this.getSuggestedChords() });
-    this.closeMenu();
   }
 
   onMenuClose = (): void => {
-    this.setState({ menuAnchorEl: null, menuIsOpen: false });
+    debugger;
+    this.setState({ menuAnchorEl: null, menuIsOpen: false, suggestedChords: null });
   }
 
   private getSuggestedChords(): (number | null)[][] | null {
@@ -308,23 +305,53 @@ export default class App extends Component<IAppProps, IAppState> {
   }
 
   private getMenuEl(): JSX.Element | null {
-    return (
-      <Popover
-        open={this.state.menuIsOpen}
-        anchorEl={this.state.menuAnchorEl}
-        onClose={this.onMenuClose}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
-        }}>
+    let content: JSX.Element | null = this.state.suggestedChords ?
+      this.getSuggestedChordsDisplay() :
+      this.getChordMelodyOptionsMenu();
 
-        {this.getChordMelodyOptionsMenu()}
-      </Popover>
+    return (
+      <Draggable>
+        <Popover
+          open={this.state.menuIsOpen}
+          anchorEl={this.state.menuAnchorEl}
+          onClose={this.onMenuClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+          }}>
+
+          {content}
+        </Popover>
+      </Draggable>
     );
+  }
+
+  private getSuggestedChordsDisplay(): JSX.Element | null {
+    if (!this.state.suggestedChords?.length) {
+      return <div>No chords found</div>;
+    }
+
+    return <div className='suggested-chords'>
+      <p className='pick-chord'>Pick a chord</p>
+
+      <Tablature
+        editorIsFocused={false}
+        chords={this.state.suggestedChords}
+        tuning={this.state.tuning}
+        maxFretNum={this.state.maxFretNum}
+        mapFromNoteLetterEnumToString={this.state.mapFromNoteLetterEnumToString}
+        focusedNote={null}
+        onKeyBoardNavigation={() => { }}
+        onEdit={() => { }}
+        onNoteClick={this.onSuggestedChordNoteClick}
+        onNoteRightClick={() => { }}
+        onEditorFocus={() => { }}
+      ></Tablature>
+    </div>;
   }
 
   private getChordMelodyOptionsMenu(): JSX.Element {
@@ -413,32 +440,6 @@ export default class App extends Component<IAppProps, IAppState> {
         </TableContainer>
       </FormControl>
     )
-  }
-
-  private getSuggestedChordsDisplay(): JSX.Element | null {
-    if (!this.state.suggestedChords) {
-      return null;
-    }
-
-    if (!this.state.suggestedChords.length) {
-      return <div>No chords found</div>;
-    }
-
-    return <div className='Suggested-Chords'>
-      <Tablature
-        editorIsFocused={false}
-        chords={this.state.suggestedChords}
-        tuning={this.state.tuning}
-        maxFretNum={this.state.maxFretNum}
-        mapFromNoteLetterEnumToString={this.state.mapFromNoteLetterEnumToString}
-        focusedNote={null}
-        onKeyBoardNavigation={() => { }}
-        onEdit={() => { }}
-        onNoteClick={this.onSuggestedChordNoteClick}
-        onNoteRightClick={() => { }}
-        onEditorFocus={() => { }}
-      ></Tablature>
-    </div>
   }
 }
 

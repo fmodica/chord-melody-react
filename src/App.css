@@ -4,9 +4,9 @@
 }
 
 .app .reset-btn {
-  float: right;
-  margin-bottom: 20px;
-  cursor: pointer;
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
 }
 
 .note-menu {
@@ -50,4 +50,32 @@
 .note-menu .MuiButtonBase-root.MuiCheckbox-root {
   width: auto;
   padding: 6px 6px 6px 0px;
+}
+
+.MuiPopover-root .MuiPopover-paper {
+  max-width: calc(50% - 40px);
+}
+
+.MuiPaper-root.MuiPopover-paper {
+  cursor: grab;
+}
+
+.MuiPaper-root.MuiPopover-paper:active {
+  cursor: grabbing;
+}
+
+.suggested-chords .chord {
+  margin-bottom: 0;
+}
+
+.suggested-chords {
+  text-align: center;
+}
+
+.suggested-chords .pick-chord {
+  margin: 20px 0 0 0;
+}
+
+.suggested-chords .tablature {
+  padding: 20px;
 }

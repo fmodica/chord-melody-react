@@ -84,13 +84,12 @@ export default class App extends Component<IAppProps, IAppState> {
 
   onNoteClick = (newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void => {
     this.setState({ focusedNote: newFocusedNote, menuAnchorEl: e.target as Element });
-    this.closeMenu();
   }
 
   onNoteRightClick = (newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void => {
     e.preventDefault();
     this.setState({ focusedNote: newFocusedNote, menuAnchorEl: e.target as Element });
-    this.openMenu(e.clientX, e.clientY);
+    this.openMenu();
   }
 
   onEditorFocus = (isFocused: boolean, e: React.FocusEvent): void => {
@@ -234,11 +233,11 @@ export default class App extends Component<IAppProps, IAppState> {
     return melodyNote;
   }
 
-  private openMenu(x: number, y: number): void {
+  private openMenu(): void {
     this.setState({ menuIsOpen: true });
   }
 
-  private closeMenu(): void {
+  private closeMenu = (): void => {
     this.setState({ menuIsOpen: false });
   }
 
@@ -337,7 +336,7 @@ export default class App extends Component<IAppProps, IAppState> {
             vertical: 'top',
             horizontal: 'left',
           }}>
-
+          <Button onClick={this.onMenuClose} className='close-btn'>&#10006;</Button>
           {content}
         </Popover>
       </Draggable>

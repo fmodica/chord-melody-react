@@ -10,7 +10,7 @@
 }
 
 .note-menu {
-  padding: 10px;
+  padding: 30px 10px 10px 10px;
   width: 200px;
 }
 
@@ -54,6 +54,13 @@
 .note-menu .MuiButtonBase-root.MuiCheckbox-root {
   width: auto;
   padding: 6px 6px 6px 0px;
+}
+
+.MuiButtonBase-root.close-btn {
+  min-width: 32px;
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .MuiPopover-root .MuiPopover-paper {

@@ -154,12 +154,18 @@ export default class App extends Component<IAppProps, IAppState> {
   }
 
   onMenuClose = (): void => {
-    this.setState({ menuAnchorEl: null, menuIsOpen: false });
+    this.setState({ menuIsOpen: false });
 
-    // Reset the suggested chords and menu placement after the animation is complete
+    // Reset the menu placement and contents after the animation is complete
     setTimeout(() => {
       this.setState(state => {
-        return { suggestedChords: null, menuCloseCount: state.menuCloseCount + 1 }
+        return {
+          suggestedChords: null,
+          menuAnchorEl: null,
+          menuCloseCount: state.menuCloseCount + 1,
+          selectedChordRoot: null,
+          selectedIntervalOptionalPairs: []
+        };
       });
     }, 200);
   }

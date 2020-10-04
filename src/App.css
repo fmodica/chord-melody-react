@@ -22,9 +22,13 @@
   text-align: center;
 }
 
-.note-menu .chord-root-menu,
+.note-menu.chord-root-selected .chord-root-menu,
 .note-menu .MuiFormHelperText-root {
   margin-bottom: 12px;
+}
+
+.note-menu .chord-root-menu {
+  margin-bottom: 0;
 }
 
 .note-menu .chord-root-menu .MuiOutlinedInput-input {
@@ -53,7 +57,7 @@
 }
 
 .MuiPopover-root .MuiPopover-paper {
-  max-width: calc(50% - 40px);
+  max-width: 50%;
 }
 
 .MuiPaper-root.MuiPopover-paper {

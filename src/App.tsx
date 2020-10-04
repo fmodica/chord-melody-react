@@ -154,8 +154,14 @@ export default class App extends Component<IAppProps, IAppState> {
   }
 
   onMenuClose = (): void => {
-    debugger;
-    this.setState({ menuAnchorEl: null, menuIsOpen: false, suggestedChords: null });
+    this.setState({ menuAnchorEl: null, menuIsOpen: false });
+
+    // Reset the suggested chords and menu placement after the animation is complete
+    setTimeout(() => {
+      this.setState(state => {
+        return { suggestedChords: null, menuCloseCount: state.menuCloseCount + 1 }
+      });
+    }, 200);
   }
 
   private getSuggestedChords(): (number | null)[][] | null {
@@ -289,9 +295,10 @@ export default class App extends Component<IAppProps, IAppState> {
       ),
       menuIsOpen: false,
       menuAnchorEl: null,
+      menuCloseCount: 0,
       selectedChordRoot: null,
       selectedIntervalOptionalPairs: [],
-      maxFretDistance: 4,
+      maxFretDistance: 5,
       suggestedChords: null
     };
   }
@@ -310,7 +317,8 @@ export default class App extends Component<IAppProps, IAppState> {
       this.getChordMelodyOptionsMenu();
 
     return (
-      <Draggable>
+      // Changing the key will allow the menu position to be reset
+      <Draggable key={this.state.menuCloseCount}>
         <Popover
           open={this.state.menuIsOpen}
           anchorEl={this.state.menuAnchorEl}
@@ -355,8 +363,10 @@ export default class App extends Component<IAppProps, IAppState> {
   }
 
   private getChordMelodyOptionsMenu(): JSX.Element {
+    const noteMenuCss = `note-menu ${this.state.selectedChordRoot === null ? '' : 'chord-root-selected'}`;
+
     return (
-      <div className='note-menu'>
+      <div className={noteMenuCss}>
         {this.getChordMelodySelectMenu()}
 
         {
@@ -455,6 +465,7 @@ interface IAppState {
   mapFromIntervalEnumToString: Map<Interval, string>;
   menuIsOpen: boolean;
   menuAnchorEl: Element | null;
+  menuCloseCount: number;
   selectedChordRoot: NoteLetter | null;
   selectedIntervalOptionalPairs: IIntervalOptionalPair[];
   maxFretDistance: number;

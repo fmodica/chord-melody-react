@@ -1,31 +1,58 @@
 import { ArrayUtilities } from "./array-utilities";
 
 export class ChordMelodyService implements IChordMelodyService {
-  getChords(requiredNotesExcludingMelody: NoteLetter[], tuning: INote[], numFrets: number, melodyStringedNote: IStringedNote, maxFretDistance: number): (number | null)[][] {
-    this.validate(requiredNotesExcludingMelody, tuning, numFrets, maxFretDistance);
+  getChords(chordRoot: NoteLetter, intervalOptionalPairs: IIntervalOptionalPair[], tuning: INote[], numFrets: number, melodyStringedNote: IStringedNote, maxFretDistance: number): (number | null)[][] {
+    this.validate(intervalOptionalPairs, tuning, numFrets, maxFretDistance);
 
-    const requiredNotesIncludingMelody: NoteLetter[] = this.addMelodyNoteToRequiredNotes(tuning, melodyStringedNote, requiredNotesExcludingMelody);
+    const noteLetterOptionalPairs: INoteLetterOptionalPair[] = this.getNoteLetterOptionalPairs(chordRoot, intervalOptionalPairs);
 
-    const fretsOfRequiredNotesOnAllStrings: (number | null)[][] = this.getsFretsOfRequiredNotesOnAllStrings(requiredNotesIncludingMelody, tuning, numFrets, melodyStringedNote);
+    const noteLetterOptionalPairsIncludingMelody: INoteLetterOptionalPair[] = this.addMelodyNoteToRequiredNotes(tuning, melodyStringedNote, noteLetterOptionalPairs);
 
-    const allCombos: (number | null)[][] = ArrayUtilities.getAllCombinations(fretsOfRequiredNotesOnAllStrings);
+    const fretsOfNotesOnAllStrings: (number | null)[][] = this.getsFretsOfNotesOnAllStrings(
+      noteLetterOptionalPairsIncludingMelody.map((pair: INoteLetterOptionalPair) => pair.noteLetter),
+      tuning,
+      numFrets,
+      melodyStringedNote
+    );
 
-    const filteredCombos: (number | null)[][] = allCombos.filter((chord) => {
-      return this.isValidChord(chord, tuning, requiredNotesIncludingMelody, maxFretDistance);
+    const allCombos: (number | null)[][] = ArrayUtilities.getAllCombinations(fretsOfNotesOnAllStrings);
+
+    const requiredNoteLetters = noteLetterOptionalPairsIncludingMelody
+      .filter((pair: INoteLetterOptionalPair) => !pair.isOptional)
+      .map((pair: INoteLetterOptionalPair) => pair.noteLetter);
+
+    const requiredNoteLetterSet = new Set<NoteLetter>(requiredNoteLetters);
+
+    const filteredCombos: (number | null)[][] = allCombos.filter((chord: (number | null)[]) => {
+      return this.isValidChord(chord, tuning, requiredNoteLetterSet, maxFretDistance);
     });
 
     return filteredCombos;
   }
 
-  private addMelodyNoteToRequiredNotes(tuning: INote[], melodyStringedNote: IStringedNote, requiredNotes: NoteLetter[]): NoteLetter[] {
-    const newRequiredNotes = [...requiredNotes];
-    const melodyNote = this.getNoteFromStringedNote(tuning, melodyStringedNote);
+  private getNoteLetterOptionalPairs(chordRoot: NoteLetter, intervalOptionalPairs: IIntervalOptionalPair[]): INoteLetterOptionalPair[] {
+    return intervalOptionalPairs.map((intervalOptionalPair: IIntervalOptionalPair) => {
+      const noteLetter: NoteLetter = this.getNoteLetterFromRootAndInterval(chordRoot, intervalOptionalPair.interval);
 
-    if (!newRequiredNotes.includes(melodyNote.letter)) {
-      newRequiredNotes.push(melodyNote.letter);
+      return {
+        noteLetter: noteLetter,
+        isOptional: intervalOptionalPair.isOptional
+      };
+    });
+  }
+
+  private addMelodyNoteToRequiredNotes(tuning: INote[], melodyStringedNote: IStringedNote, noteLetterOptionalPairs: INoteLetterOptionalPair[]): INoteLetterOptionalPair[] {
+    const newNoteLetterOptionalPairs: INoteLetterOptionalPair[] = [...noteLetterOptionalPairs];
+    const melodyNote: INote = this.getNoteFromStringedNote(tuning, melodyStringedNote);
+
+    if (!newNoteLetterOptionalPairs.map(x => x.noteLetter).includes(melodyNote.letter)) {
+      newNoteLetterOptionalPairs.push({
+        noteLetter: melodyNote.letter,
+        isOptional: false
+      });
     }
 
-    return newRequiredNotes;
+    return newNoteLetterOptionalPairs;
   }
 
   private getNoteFromStringedNote(tuning: INote[], stringedNote: IStringedNote): INote {
@@ -35,30 +62,30 @@ export class ChordMelodyService implements IChordMelodyService {
     return melodyNote;
   }
 
-  private getsFretsOfRequiredNotesOnAllStrings(requiredNotes: NoteLetter[], tuning: INote[], numFrets: number, melodyStringedNote: IStringedNote): (number | null)[][] {
-    const fretsOfRequiredNotesOnAllStrings: (number | null)[][] = [];
-    const requiredNotesSet: Set<NoteLetter> = new Set(requiredNotes);
+  private getsFretsOfNotesOnAllStrings(notes: NoteLetter[], tuning: INote[], numFrets: number, melodyStringedNote: IStringedNote): (number | null)[][] {
+    const fretsOfNotesOnAllStrings: (number | null)[][] = [];
+    const requiredNotesSet: Set<NoteLetter> = new Set(notes);
     const melodyNote: INote = this.getNoteFromFret(tuning[melodyStringedNote.stringIndex], melodyStringedNote.fret);
 
     for (let i = 0; i < tuning.length; i++) {
       if (i === melodyStringedNote.stringIndex) {
-        fretsOfRequiredNotesOnAllStrings.push([melodyStringedNote.fret]);
+        fretsOfNotesOnAllStrings.push([melodyStringedNote.fret]);
         continue;
       }
 
-      const fretsOfRequiredNotesOnString: (number | null)[] = this.getFretsOfRequiredNotesOnString(numFrets, tuning, i, requiredNotesSet, melodyNote);
-      fretsOfRequiredNotesOnAllStrings.push(fretsOfRequiredNotesOnString);
+      const fretsOfRequiredNotesOnString: (number | null)[] = this.getFretsOfNotesOnString(numFrets, tuning, i, requiredNotesSet, melodyNote);
+      fretsOfNotesOnAllStrings.push(fretsOfRequiredNotesOnString);
     }
 
-    return fretsOfRequiredNotesOnAllStrings;
+    return fretsOfNotesOnAllStrings;
   }
 
-  private isValidChord(chord: (number | null)[], tuning: INote[], requiredNotesIncludingMelody: NoteLetter[], maxFretDistance: number): boolean {
+  private isValidChord(chord: (number | null)[], tuning: INote[], requiredNoteLetterSet: Set<NoteLetter>, maxFretDistance: number): boolean {
     if (chord.length === 0) {
       throw new Error(`The chord has no elements.`);
     }
 
-    if (!this.meetsNotesRequirement(chord, tuning, requiredNotesIncludingMelody)) {
+    if (!this.meetsNotesRequirement(chord, tuning, requiredNoteLetterSet)) {
       return false;
     }
 
@@ -69,7 +96,7 @@ export class ChordMelodyService implements IChordMelodyService {
     return true;
   }
 
-  private meetsNotesRequirement(chord: (number | null)[], tuning: INote[], requiredNotesIncludingMelody: NoteLetter[]): boolean {
+  private meetsNotesRequirement(chord: (number | null)[], tuning: INote[], requiredNoteLetterSet: Set<NoteLetter>): boolean {
     const noteLetterSet = new Set<NoteLetter>();
 
     for (let i = 0; i < chord.length; i++) {
@@ -80,10 +107,13 @@ export class ChordMelodyService implements IChordMelodyService {
       }
 
       const note: INote = this.getNoteFromFret(tuning[i], fret);
-      noteLetterSet.add(note.letter);
+
+      if (requiredNoteLetterSet.has(note.letter)) {
+        noteLetterSet.add(note.letter);
+      }
     }
 
-    return noteLetterSet.size === requiredNotesIncludingMelody.length;
+    return noteLetterSet.size === requiredNoteLetterSet.size;
   }
 
   private meetsLengthRequirement(chord: (number | null)[], maxFretDistance: number): boolean {
@@ -100,7 +130,7 @@ export class ChordMelodyService implements IChordMelodyService {
     return (max - min) <= maxFretDistance;
   }
 
-  private getFretsOfRequiredNotesOnString(numFrets: number, tuning: INote[], stringIndex: number, requiredNotesSet: Set<NoteLetter>, melodyNote: INote): (number | null)[] {
+  private getFretsOfNotesOnString(numFrets: number, tuning: INote[], stringIndex: number, requiredNotesSet: Set<NoteLetter>, melodyNote: INote): (number | null)[] {
     const fretsOfRequiredNotesOnString: (number | null)[] = [null];
     const melodyNoteValue: number = this.getNoteValue(melodyNote);
 
@@ -115,9 +145,10 @@ export class ChordMelodyService implements IChordMelodyService {
     return fretsOfRequiredNotesOnString;
   }
 
-  private validate(requiredNotes: NoteLetter[], tuning: INote[], numFrets: number, maxFretDistance: number): void {
-    if (requiredNotes.length === 0) {
-      throw new Error(`The required notes array has no elements.`);
+  private validate(intervalOptionalPairs: IIntervalOptionalPair[], tuning: INote[], numFrets: number, maxFretDistance: number): void {
+    // Check for uniqueness
+    if (intervalOptionalPairs.length === 0) {
+      throw new Error(`The interval-optional pairs array has no elements.`);
     }
 
     if (tuning.length === 0) {
@@ -131,6 +162,14 @@ export class ChordMelodyService implements IChordMelodyService {
     if (maxFretDistance <= 0) {
       throw new Error(`The max fret distance must be greater than zero, but it is ${maxFretDistance}.`);
     }
+  }
+
+  private getNoteLetterFromRootAndInterval(root: NoteLetter, interval: Interval): NoteLetter {
+    let note: number = root + interval;
+
+    return note > 11
+      ? (note - 12)
+      : note
   }
 
   private getNoteFromFret(tuningNote: INote, fret: number): INote {
@@ -195,9 +234,15 @@ export interface IIntervalOptionalPair {
   isOptional: boolean;
 }
 
+interface INoteLetterOptionalPair {
+  noteLetter: NoteLetter;
+  isOptional: boolean;
+}
+
 export interface IChordMelodyService {
   getChords(
-    requiredNotes: NoteLetter[],
+    chordRoot: NoteLetter,
+    intervalOptionalPairs: IIntervalOptionalPair[],
     tuning: INote[],
     numFrets: number,
     melodyNote: IStringedNote,

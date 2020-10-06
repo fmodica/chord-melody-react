@@ -172,15 +172,23 @@ export default class App extends Component<IAppProps, IAppState> {
   private getSuggestedChords(): (number | null)[][] | null {
     const melodyStringedNote: IStringedNote | null = this.getFocusedNoteAsStringedNote();
 
-    if (melodyStringedNote === null) {
+    if (
+      this.state.selectedChordRoot === null ||
+      this.state.selectedIntervalOptionalPairs === null ||
+      this.state.selectedIntervalOptionalPairs.length === 0 ||
+      melodyStringedNote === null
+    ) {
       return null;
     }
 
-    const requiredNotesExcludingMelody = this.state.selectedIntervalOptionalPairs.map(intervalOptionalPair => {
-      return this.getNoteLetterFromRootAndInterval(this.state.selectedChordRoot as NoteLetter, intervalOptionalPair.interval);
-    });
-
-    const suggestedChords: (number | null)[][] | null = this.chordMelodyService.getChords(requiredNotesExcludingMelody, this.state.tuning, 24, melodyStringedNote, this.state.maxFretDistance);
+    const suggestedChords: (number | null)[][] | null = this.chordMelodyService.getChords(
+      this.state.selectedChordRoot,
+      this.state.selectedIntervalOptionalPairs,
+      this.state.tuning,
+      24,
+      melodyStringedNote,
+      this.state.maxFretDistance
+    );
 
     const suggestedChordsRequiringFourFingersMax = suggestedChords.filter(chord => this.chordPlayabilityService.getPlayability(chord) <= 4);
 
@@ -237,18 +245,6 @@ export default class App extends Component<IAppProps, IAppState> {
     this.setState({ menuIsOpen: true });
   }
 
-  private closeMenu = (): void => {
-    this.setState({ menuIsOpen: false });
-  }
-
-  private getNoteLetterFromRootAndInterval(root: NoteLetter, interval: Interval): NoteLetter {
-    let note: number = root + interval;
-
-    return note > 11
-      ? (note - 12)
-      : note
-  }
-
   private getInitialState(): IAppState {
     return {
       editorIsFocused: true,
@@ -303,7 +299,7 @@ export default class App extends Component<IAppProps, IAppState> {
       menuCloseCount: 0,
       selectedChordRoot: null,
       selectedIntervalOptionalPairs: [],
-      maxFretDistance: 5,
+      maxFretDistance: 4,
       suggestedChords: null
     };
   }

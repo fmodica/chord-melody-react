@@ -88,8 +88,22 @@ export default class App extends Component<IAppProps, IAppState> {
 
   onNoteRightClick = (newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void => {
     e.preventDefault();
-    this.setState({ focusedNote: newFocusedNote, menuAnchorEl: e.target as Element });
-    this.openMenu();
+
+    if (newFocusedNote === null) {
+      return;
+    }
+
+    const fret: number | null = this.state.chords[newFocusedNote.chordIndex][newFocusedNote.stringIndex];
+
+    if (fret === null) {
+      return;
+    }
+
+    this.setState({
+      focusedNote: newFocusedNote,
+      menuIsOpen: true,
+      menuAnchorEl: e.target as Element
+    });
   }
 
   onEditorFocus = (isFocused: boolean, e: React.FocusEvent): void => {
@@ -127,7 +141,10 @@ export default class App extends Component<IAppProps, IAppState> {
     if (indexOfSelectedInterval !== -1) {
       newIntervalOptionalPairs.splice(indexOfSelectedInterval, 1);
     } else {
-      newIntervalOptionalPairs.push({ interval: interval, isOptional: false });
+      newIntervalOptionalPairs.push({
+        interval: interval,
+        isOptional: interval === Interval.Fifth
+      });
     }
 
     this.setState({ selectedIntervalOptionalPairs: newIntervalOptionalPairs });

@@ -65,6 +65,7 @@
 
 .MuiPopover-root .MuiPopover-paper {
   max-width: 50%;
+  min-width: 175px;
 }
 
 .MuiPaper-root.MuiPopover-paper {

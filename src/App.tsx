@@ -83,27 +83,28 @@ export default class App extends Component<IAppProps, IAppState> {
   }
 
   onNoteClick = (newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void => {
-    this.setState({ focusedNote: newFocusedNote, menuAnchorEl: e.target as Element });
+    if (this.state.menuIsOpen) {
+      this.closeMenu();
+    }
+
+    this.setState({ focusedNote: newFocusedNote });
   }
 
   onNoteRightClick = (newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void => {
     e.preventDefault();
 
-    if (newFocusedNote === null) {
-      return;
-    }
-
     const fret: number | null = this.state.chords[newFocusedNote.chordIndex][newFocusedNote.stringIndex];
 
-    if (fret === null) {
-      return;
+    if (this.state.menuIsOpen) {
+      this.closeMenu();
+    } else if (fret !== null) {
+      this.setState({
+        menuIsOpen: true,
+        menuAnchorEl: e.target as Element
+      });
     }
 
-    this.setState({
-      focusedNote: newFocusedNote,
-      menuIsOpen: true,
-      menuAnchorEl: e.target as Element
-    });
+    this.setState({ focusedNote: newFocusedNote });
   }
 
   onEditorFocus = (isFocused: boolean, e: React.FocusEvent): void => {
@@ -169,7 +170,7 @@ export default class App extends Component<IAppProps, IAppState> {
     this.setState({ suggestedChords: this.getSuggestedChords() });
   }
 
-  onMenuClose = (): void => {
+  closeMenu = (): void => {
     this.setState({ menuIsOpen: false });
 
     // Reset the menu placement and contents after the animation is complete
@@ -258,10 +259,6 @@ export default class App extends Component<IAppProps, IAppState> {
     return melodyNote;
   }
 
-  private openMenu(): void {
-    this.setState({ menuIsOpen: true });
-  }
-
   private getInitialState(): IAppState {
     return {
       editorIsFocused: true,
@@ -340,7 +337,7 @@ export default class App extends Component<IAppProps, IAppState> {
         <Popover
           open={this.state.menuIsOpen}
           anchorEl={this.state.menuAnchorEl}
-          onClose={this.onMenuClose}
+          onClose={this.closeMenu}
           anchorOrigin={{
             vertical: 'bottom',
             horizontal: 'right',
@@ -349,7 +346,7 @@ export default class App extends Component<IAppProps, IAppState> {
             vertical: 'top',
             horizontal: 'left',
           }}>
-          <Button onClick={this.onMenuClose} className='close-btn'>&#10006;</Button>
+          <Button onClick={this.closeMenu} className='close-btn'>&#10006;</Button>
           {content}
         </Popover>
       </Draggable>

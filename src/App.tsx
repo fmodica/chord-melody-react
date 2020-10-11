@@ -47,7 +47,6 @@ export default class App extends Component<IAppProps, IAppState> {
             onKeyBoardNavigation={this.onKeyBoardNavigation}
             onEdit={this.onEdit}
             onNoteClick={this.onNoteClick}
-            onNoteRightClick={this.onNoteRightClick}
             onEditorFocus={this.onEditorFocus}
           ></Tablature>
 
@@ -87,29 +86,21 @@ export default class App extends Component<IAppProps, IAppState> {
     window.localStorage.setItem(this.tabsKey, JSON.stringify(newChords));
   }
 
-  onNoteClick = (newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void => {
-    if (this.state.menuIsOpen) {
-      this.closeMenu();
-    }
-
-    this.setState({ focusedNote: newFocusedNote });
-  }
-
-  onNoteRightClick = (newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void => {
-    e.preventDefault();
-
-    const fret: number | null = this.state.chords[newFocusedNote.chordIndex][newFocusedNote.stringIndex];
+  onNoteClick = (clickedNote: ITabNoteLocation, e: React.MouseEvent): void => {
+    const fret: number | null = this.state.chords[clickedNote.chordIndex][clickedNote.stringIndex];
 
     if (this.state.menuIsOpen) {
       this.closeMenu();
-    } else if (fret !== null) {
-      this.setState({
-        menuIsOpen: true,
-        menuAnchorEl: e.target as Element
-      });
+    } else if (this.state.focusedNote.chordIndex === clickedNote.chordIndex && this.state.focusedNote.stringIndex === clickedNote.stringIndex) {
+      if (fret !== null) {
+        this.setState({
+          menuIsOpen: true,
+          menuAnchorEl: e.target as Element
+        });
+      }
     }
 
-    this.setState({ focusedNote: newFocusedNote });
+    this.setState({ focusedNote: clickedNote });
   }
 
   onEditorFocus = (isFocused: boolean, e: React.FocusEvent): void => {
@@ -267,7 +258,7 @@ export default class App extends Component<IAppProps, IAppState> {
   private getInitialState(): IAppState {
     return {
       editorIsFocused: true,
-      chords: this.getEmptyChords(16, 6),
+      chords: this.getEmptyChords(32, 6),
       focusedNote: {
         chordIndex: 0,
         stringIndex: 0
@@ -378,7 +369,6 @@ export default class App extends Component<IAppProps, IAppState> {
         onKeyBoardNavigation={() => { }}
         onEdit={() => { }}
         onNoteClick={this.onSuggestedChordNoteClick}
-        onNoteRightClick={() => { }}
         onEditorFocus={() => { }}
       ></Tablature>
     </div>;

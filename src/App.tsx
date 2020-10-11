@@ -13,14 +13,18 @@ import TableRow from '@material-ui/core/TableRow';
 import Checkbox from '@material-ui/core/Checkbox';
 import Button from '@material-ui/core/Button';
 import Popover from '@material-ui/core/Popover';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+
 import Draggable from 'react-draggable';
 
 import { Tablature, ITabNoteLocation, INote, NoteLetter } from './submodules/tablature-react/src/tablature/tablature';
 import { IStringedNote, Interval, IIntervalOptionalPair, IChordMelodyService, ChordMelodyService } from './services/chord-melody-service';
 import { ChordPlayabilityService, IChordPlayabilityService } from './services/chord-playability-service';
 
-import './App.css';
 import { ArrayUtilities } from './services/array-utilities';
+
+import './App.css';
+
 export default class App extends Component<IAppProps, IAppState> {
   private readonly tabsKey: string = 'tabs';
   private readonly chordMelodyService: IChordMelodyService = new ChordMelodyService();
@@ -438,12 +442,17 @@ export default class App extends Component<IAppProps, IAppState> {
                   return (
                     <TableRow key={entry[0]}>
                       <TableCell padding='none' size='small'>
-                        <Checkbox
-                          size='small'
-                          color='primary'
-                          checked={indexOfSelectedInterval !== -1}
-                          onChange={() => this.onIntervalChecked(entry[0], indexOfSelectedInterval)} />
-                        <label>{entry[1]}</label>
+                        <FormControlLabel
+                          value={entry[1]}
+                          label={entry[1]}
+                          labelPlacement="end"
+                          control={
+                            <Checkbox
+                              size='small'
+                              color='primary'
+                              checked={indexOfSelectedInterval !== -1}
+                              onChange={() => this.onIntervalChecked(entry[0], indexOfSelectedInterval)} />}
+                        ></FormControlLabel>
                       </TableCell>
                       <TableCell padding='none' size='small'>
                         <Checkbox

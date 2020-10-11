@@ -53,10 +53,6 @@
   overflow: hidden;
 }
 
-.note-menu .MuiTableContainer-root label {
-  padding-bottom: 12px;
-}
-
 .note-menu .MuiButtonBase-root {
   width: 100%;
 }
@@ -64,6 +60,11 @@
 .note-menu .MuiButtonBase-root.MuiCheckbox-root {
   width: auto;
   padding: 6px 6px 6px 0px;
+}
+
+.note-menu .MuiFormControlLabel-root {
+  margin-right: 0;
+  margin-left: 0;
 }
 
 .MuiButtonBase-root.close-btn {

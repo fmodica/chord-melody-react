@@ -34,25 +34,29 @@ export default class App extends Component<IAppProps, IAppState> {
 
   render(): JSX.Element {
     return (
-      <div className='app'>
-        <Button className='reset-btn' variant='contained' color='secondary' onClick={this.onReset}>Start Over</Button>
+      <div className='app-container'>
+        <div className='app'>
+          <Tablature
+            editorIsFocused={this.state.editorIsFocused}
+            chords={this.state.chords}
+            tuning={this.state.tuning}
+            maxFretNum={this.state.maxFretNum}
+            notesPerMeasure={this.state.notesPerMeasure}
+            mapFromNoteLetterEnumToString={this.state.mapFromNoteLetterEnumToString}
+            focusedNote={this.state.focusedNote}
+            onKeyBoardNavigation={this.onKeyBoardNavigation}
+            onEdit={this.onEdit}
+            onNoteClick={this.onNoteClick}
+            onNoteRightClick={this.onNoteRightClick}
+            onEditorFocus={this.onEditorFocus}
+          ></Tablature>
 
-        <Tablature
-          editorIsFocused={this.state.editorIsFocused}
-          chords={this.state.chords}
-          tuning={this.state.tuning}
-          maxFretNum={this.state.maxFretNum}
-          notesPerMeasure={this.state.notesPerMeasure}
-          mapFromNoteLetterEnumToString={this.state.mapFromNoteLetterEnumToString}
-          focusedNote={this.state.focusedNote}
-          onKeyBoardNavigation={this.onKeyBoardNavigation}
-          onEdit={this.onEdit}
-          onNoteClick={this.onNoteClick}
-          onNoteRightClick={this.onNoteRightClick}
-          onEditorFocus={this.onEditorFocus}
-        ></Tablature>
+          {this.getMenuEl()}
+        </div>
 
-        {this.getMenuEl()}
+        <div className='bottom-menu'>
+          <Button className='reset-btn' variant='contained' color='secondary' onClick={this.onReset}>Start Over</Button>
+        </div>
       </div>
     );
   }

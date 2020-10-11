@@ -42,6 +42,7 @@ export default class App extends Component<IAppProps, IAppState> {
           chords={this.state.chords}
           tuning={this.state.tuning}
           maxFretNum={this.state.maxFretNum}
+          notesPerMeasure={this.state.notesPerMeasure}
           mapFromNoteLetterEnumToString={this.state.mapFromNoteLetterEnumToString}
           focusedNote={this.state.focusedNote}
           onKeyBoardNavigation={this.onKeyBoardNavigation}
@@ -276,6 +277,7 @@ export default class App extends Component<IAppProps, IAppState> {
         { letter: NoteLetter.E, octave: 2 }
       ],
       maxFretNum: 24,
+      notesPerMeasure: 8,
       mapFromNoteLetterEnumToString: new Map(
         [
           [NoteLetter.Aflat, 'Ab'],
@@ -366,6 +368,7 @@ export default class App extends Component<IAppProps, IAppState> {
         chords={this.state.suggestedChords}
         tuning={this.state.tuning}
         maxFretNum={this.state.maxFretNum}
+        notesPerMeasure={null}
         mapFromNoteLetterEnumToString={this.state.mapFromNoteLetterEnumToString}
         focusedNote={null}
         onKeyBoardNavigation={() => { }}
@@ -476,6 +479,7 @@ interface IAppState {
   focusedNote: ITabNoteLocation;
   tuning: INote[];
   maxFretNum: number;
+  notesPerMeasure: number | null;
   mapFromNoteLetterEnumToString: Map<NoteLetter, string>;
   mapFromIntervalEnumToString: Map<Interval, string>;
   menuIsOpen: boolean;

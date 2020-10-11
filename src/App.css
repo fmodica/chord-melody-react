@@ -86,12 +86,17 @@
   cursor: grabbing;
 }
 
-.suggested-chords .chord {
-  margin-bottom: 0;
-}
-
 .suggested-chords {
   text-align: center;
+}
+
+.suggested-chords .chord {
+  margin-bottom: 0;
+  cursor: pointer;
+}
+
+.suggested-chords .chord:hover {
+  background-color: #fff2ac;
 }
 
 .suggested-chords .pick-chord {

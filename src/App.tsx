@@ -95,13 +95,11 @@ export default class App extends Component<IAppProps, IAppState> {
 
     if (this.state.menuIsOpen) {
       this.closeMenu();
-    } else if (this.state.focusedNote.chordIndex === clickedNote.chordIndex && this.state.focusedNote.stringIndex === clickedNote.stringIndex) {
-      if (fret !== null) {
-        this.setState({
-          menuIsOpen: true,
-          menuAnchorEl: e.target as Element
-        });
-      }
+    } else if (this.tabLocationsAreEqual(this.state.focusedNote, clickedNote) && fret !== null) {
+      this.setState({
+        menuIsOpen: true,
+        menuAnchorEl: e.target as Element
+      });
     }
 
     this.setState({ focusedNote: clickedNote });
@@ -162,6 +160,12 @@ export default class App extends Component<IAppProps, IAppState> {
     this.setState({ selectedIntervalOptionalPairs: newIntervalOptionalPairs });
   }
 
+  onExcludeChordsWithOpenNotes = (): void => {
+    this.setState(state => {
+      return { excludeChordsWithOpenNotes: !state.excludeChordsWithOpenNotes };
+    });
+  }
+
   onGetChordsClick = (): void => {
     if (this.state.focusedNote === null) {
       return;
@@ -179,9 +183,10 @@ export default class App extends Component<IAppProps, IAppState> {
         return {
           suggestedChords: null,
           menuAnchorEl: null,
-          menuCloseCount: state.menuCloseCount + 1,
-          selectedChordRoot: null,
-          selectedIntervalOptionalPairs: []
+          menuCloseCount: state.menuCloseCount + 1
+          // selectedChordRoot: null,
+          // selectedIntervalOptionalPairs: [],
+          // excludeChordsWithOpenNotes: false
         };
       });
     }, 200);
@@ -205,7 +210,8 @@ export default class App extends Component<IAppProps, IAppState> {
       this.state.tuning,
       24,
       melodyStringedNote,
-      this.state.maxFretDistance
+      this.state.maxFretDistance,
+      this.state.excludeChordsWithOpenNotes
     );
 
     const suggestedChordsRequiringFourFingersMax = suggestedChords.filter(chord => this.chordPlayabilityService.getPlayability(chord) <= 4);
@@ -314,6 +320,7 @@ export default class App extends Component<IAppProps, IAppState> {
       menuCloseCount: 0,
       selectedChordRoot: null,
       selectedIntervalOptionalPairs: [],
+      excludeChordsWithOpenNotes: false,
       maxFretDistance: 4,
       suggestedChords: null
     };
@@ -325,6 +332,10 @@ export default class App extends Component<IAppProps, IAppState> {
 
   private getAllNulls = (size: number): null[] => {
     return new Array(size).fill(null);
+  }
+
+  private tabLocationsAreEqual(one: ITabNoteLocation, two: ITabNoteLocation): boolean {
+    return one.chordIndex === two.chordIndex && one.stringIndex === two.stringIndex;
   }
 
   private getMenuEl(): JSX.Element | null {
@@ -388,7 +399,23 @@ export default class App extends Component<IAppProps, IAppState> {
         {
           this.state.selectedChordRoot === null ?
             null :
-            [this.getChordMelodyIntervalsTable(), this.getSubmitButton()]
+            [
+              this.getChordMelodyIntervalsTable(),
+
+              <FormControlLabel
+              label={'Exclude chords with open notes'}
+              labelPlacement="end"
+              control={
+                <Checkbox
+                size='small'
+                color='primary'
+                checked={this.state.excludeChordsWithOpenNotes}
+                onChange={this.onExcludeChordsWithOpenNotes} />}
+            ></FormControlLabel>
+
+              ,
+              this.getSubmitButton(),
+            ]
         }
       </div>
     );
@@ -443,7 +470,6 @@ export default class App extends Component<IAppProps, IAppState> {
                     <TableRow key={entry[0]}>
                       <TableCell padding='none' size='small'>
                         <FormControlLabel
-                          value={entry[1]}
                           label={entry[1]}
                           labelPlacement="end"
                           control={
@@ -490,6 +516,7 @@ interface IAppState {
   menuCloseCount: number;
   selectedChordRoot: NoteLetter | null;
   selectedIntervalOptionalPairs: IIntervalOptionalPair[];
+  excludeChordsWithOpenNotes: boolean;
   maxFretDistance: number;
   // If null, we are not currently suggesting chords.
   // If empty, we are suggesting chords but there are none.

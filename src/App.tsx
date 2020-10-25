@@ -14,6 +14,7 @@ import Checkbox from '@material-ui/core/Checkbox';
 import Button from '@material-ui/core/Button';
 import Popover from '@material-ui/core/Popover';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import { AppBar, Box, Tab, Tabs, Typography } from '@material-ui/core';
 
 import Draggable from 'react-draggable';
 
@@ -24,6 +25,33 @@ import { ChordPlayabilityService, IChordPlayabilityService } from './services/ch
 import { ArrayUtilities } from './services/array-utilities';
 
 import './App.css';
+
+
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: any;
+  value: any;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box>
+          <Typography>{children}</Typography>
+        </Box>
+      )}
+    </div>
+  );
+}
 
 export default class App extends Component<IAppProps, IAppState> {
   private readonly tabsKey: string = 'tabs';
@@ -127,6 +155,10 @@ export default class App extends Component<IAppProps, IAppState> {
     this.setState(this.getInitialState());
   }
 
+  onTabSelected = (event: React.ChangeEvent<{}>, newValue: number): void => {
+    this.setState({ selectedTab: newValue });
+  }
+
   onChordRootSelected = (event: React.ChangeEvent<{ value: unknown }>): void => {
     const valueAsString: string | null = event.target.value as string | null;
     const valueParsed: number | null = valueAsString === null ? null : parseInt(valueAsString);
@@ -183,7 +215,8 @@ export default class App extends Component<IAppProps, IAppState> {
         return {
           suggestedChords: null,
           menuAnchorEl: null,
-          menuCloseCount: state.menuCloseCount + 1
+          menuCloseCount: state.menuCloseCount + 1,
+          selectedTab: 0
           // selectedChordRoot: null,
           // selectedIntervalOptionalPairs: [],
           // excludeChordsWithOpenNotes: false
@@ -318,6 +351,7 @@ export default class App extends Component<IAppProps, IAppState> {
       menuIsOpen: false,
       menuAnchorEl: null,
       menuCloseCount: 0,
+      selectedTab: 0,
       selectedChordRoot: null,
       selectedIntervalOptionalPairs: [],
       excludeChordsWithOpenNotes: false,
@@ -393,31 +427,40 @@ export default class App extends Component<IAppProps, IAppState> {
     const noteMenuCss = `note-menu ${this.state.selectedChordRoot === null ? '' : 'chord-root-selected'}`;
 
     return (
-      <div className={noteMenuCss}>
-        {this.getChordMelodySelectMenu()}
+      <>
+        <Tabs value={this.state.selectedTab} onChange={this.onTabSelected}>
+          <Tab label="Options" />
+          <Tab label="Advanced" />
+        </Tabs>
+        <TabPanel value={this.state.selectedTab} index={0}>
+          <div className={noteMenuCss}>
+            {this.getChordMelodySelectMenu()}
 
-        {
-          this.state.selectedChordRoot === null ?
-            null :
-            [
-              this.getChordMelodyIntervalsTable(),
-
-              <FormControlLabel
+            {
+              this.state.selectedChordRoot === null ?
+                null :
+                <>
+                  {this.getChordMelodyIntervalsTable()}
+                  {this.getSubmitButton()}
+                </>
+            }
+          </div>
+        </TabPanel>
+        <TabPanel value={this.state.selectedTab} index={1}>
+          <div className='note-menu'>
+            <FormControlLabel
               label={'Exclude chords with open notes'}
               labelPlacement="end"
               control={
                 <Checkbox
-                size='small'
-                color='primary'
-                checked={this.state.excludeChordsWithOpenNotes}
-                onChange={this.onExcludeChordsWithOpenNotes} />}
+                  size='small'
+                  color='primary'
+                  checked={this.state.excludeChordsWithOpenNotes}
+                  onChange={this.onExcludeChordsWithOpenNotes} />}
             ></FormControlLabel>
-
-              ,
-              this.getSubmitButton(),
-            ]
-        }
-      </div>
+          </div>
+        </TabPanel>
+      </>
     );
   }
 
@@ -514,6 +557,7 @@ interface IAppState {
   menuIsOpen: boolean;
   menuAnchorEl: Element | null;
   menuCloseCount: number;
+  selectedTab: number;
   selectedChordRoot: NoteLetter | null;
   selectedIntervalOptionalPairs: IIntervalOptionalPair[];
   excludeChordsWithOpenNotes: boolean;

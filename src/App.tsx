@@ -1,57 +1,14 @@
 import React, { Component } from 'react';
 
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
-import FormHelperText from '@material-ui/core/FormHelperText';
-import MenuItem from '@material-ui/core/MenuItem';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableHead from '@material-ui/core/TableHead';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableRow from '@material-ui/core/TableRow';
-import Checkbox from '@material-ui/core/Checkbox';
 import Button from '@material-ui/core/Button';
-import Popover from '@material-ui/core/Popover';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import { AppBar, Box, Tab, Tabs, Typography } from '@material-ui/core';
-
-import Draggable from 'react-draggable';
 
 import { Tablature, ITabNoteLocation, INote, NoteLetter } from './submodules/tablature-react/src/tablature/tablature';
+import ChordMenu from './components/ChordMenu';
 import { IStringedNote, Interval, IIntervalOptionalPair, IChordMelodyService, ChordMelodyService } from './services/chord-melody-service';
 import { ChordPlayabilityService, IChordPlayabilityService } from './services/chord-playability-service';
-
 import { ArrayUtilities } from './services/array-utilities';
 
 import './App.css';
-
-
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: any;
-  value: any;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box>
-          <Typography>{children}</Typography>
-        </Box>
-      )}
-    </div>
-  );
-}
 
 export default class App extends Component<IAppProps, IAppState> {
   private readonly tabsKey: string = 'tabs';
@@ -192,7 +149,7 @@ export default class App extends Component<IAppProps, IAppState> {
     this.setState({ selectedIntervalOptionalPairs: newIntervalOptionalPairs });
   }
 
-  onExcludeChordsWithOpenNotes = (): void => {
+  onExcludeChordsWithOpenNotesChecked = (): void => {
     this.setState(state => {
       return { excludeChordsWithOpenNotes: !state.excludeChordsWithOpenNotes };
     });
@@ -373,173 +330,27 @@ export default class App extends Component<IAppProps, IAppState> {
   }
 
   private getMenuEl(): JSX.Element | null {
-    let content: JSX.Element | null = this.state.suggestedChords ?
-      this.getSuggestedChordsDisplay() :
-      this.getChordMelodyOptionsMenu();
-
-    return (
-      // Changing the key will allow the menu position to be reset
-      <Draggable key={this.state.menuCloseCount}>
-        <Popover
-          open={this.state.menuIsOpen}
-          anchorEl={this.state.menuAnchorEl}
-          onClose={this.closeMenu}
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'right',
-          }}
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'left',
-          }}>
-          <Button onClick={this.closeMenu} className='close-btn'>&#10006;</Button>
-          {content}
-        </Popover>
-      </Draggable>
-    );
-  }
-
-  private getSuggestedChordsDisplay(): JSX.Element | null {
-    if (!this.state.suggestedChords?.length) {
-      return <div>No chords found</div>;
-    }
-
-    return <div className='suggested-chords'>
-      <p className='pick-chord'>Pick a chord</p>
-
-      <Tablature
-        editorIsFocused={false}
-        chords={this.state.suggestedChords}
-        tuning={this.state.tuning}
-        maxFretNum={this.state.maxFretNum}
-        notesPerMeasure={null}
-        mapFromNoteLetterEnumToString={this.state.mapFromNoteLetterEnumToString}
-        focusedNote={null}
-        onKeyBoardNavigation={() => { }}
-        onEdit={() => { }}
-        onNoteClick={this.onSuggestedChordNoteClick}
-        onEditorFocus={() => { }}
-      ></Tablature>
-    </div>;
-  }
-
-  private getChordMelodyOptionsMenu(): JSX.Element {
-    const noteMenuCss = `note-menu ${this.state.selectedChordRoot === null ? '' : 'chord-root-selected'}`;
-
-    return (
-      <>
-        <Tabs value={this.state.selectedTab} onChange={this.onTabSelected}>
-          <Tab label="Options" />
-          <Tab label="Advanced" />
-        </Tabs>
-        <TabPanel value={this.state.selectedTab} index={0}>
-          <div className={noteMenuCss}>
-            {this.getChordMelodySelectMenu()}
-
-            {
-              this.state.selectedChordRoot === null ?
-                null :
-                <>
-                  {this.getChordMelodyIntervalsTable()}
-                  {this.getSubmitButton()}
-                </>
-            }
-          </div>
-        </TabPanel>
-        <TabPanel value={this.state.selectedTab} index={1}>
-          <div className='note-menu'>
-            <FormControlLabel
-              label={'Exclude chords with open notes'}
-              labelPlacement="end"
-              control={
-                <Checkbox
-                  size='small'
-                  color='primary'
-                  checked={this.state.excludeChordsWithOpenNotes}
-                  onChange={this.onExcludeChordsWithOpenNotes} />}
-            ></FormControlLabel>
-          </div>
-        </TabPanel>
-      </>
-    );
-  }
-
-  private getSubmitButton(): JSX.Element {
-    return <Button variant='contained' color='primary' disabled={this.state.selectedIntervalOptionalPairs.length === 0} onClick={this.onGetChordsClick}>Get Chords</Button>;
-  }
-
-  private getChordMelodySelectMenu(): JSX.Element {
-    const noteLetterEntries = Array.from(this.state.mapFromNoteLetterEnumToString.entries());
-
-    return (
-      <FormControl variant='outlined'>
-        <FormHelperText>Let's build a chord under this melody node.</FormHelperText>
-        <FormHelperText>First select a chord root.</FormHelperText>
-        <Select className='chord-root-menu' onChange={this.onChordRootSelected} value={this.state.selectedChordRoot === null ? '' : this.state.selectedChordRoot}>
-          {
-            noteLetterEntries.map(entry => {
-              return <MenuItem key={entry[0]} value={entry[0]}>{entry[1]}</MenuItem>;
-            })
-          }
-        </Select>
-      </FormControl>
-    );
-  }
-
-  private getChordMelodyIntervalsTable(): JSX.Element {
-    const intervalEntries = Array.from(this.state.mapFromIntervalEnumToString.entries());
-
-    return (
-      <FormControl>
-        <FormHelperText>Now select the chord intervals.</FormHelperText>
-        <TableContainer>
-          <Table size='small' padding='none'>
-            <TableHead>
-              <TableRow>
-                <TableCell padding='none'>
-                  Interval
-                </TableCell>
-                <TableCell padding='none'>
-                  Optional?
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {
-                intervalEntries.map(entry => {
-                  const indexOfSelectedInterval: number = this.state.selectedIntervalOptionalPairs.findIndex(x => x.interval === entry[0]);
-
-                  return (
-                    <TableRow key={entry[0]}>
-                      <TableCell padding='none' size='small'>
-                        <FormControlLabel
-                          label={entry[1]}
-                          labelPlacement="end"
-                          control={
-                            <Checkbox
-                              size='small'
-                              color='primary'
-                              checked={indexOfSelectedInterval !== -1}
-                              onChange={() => this.onIntervalChecked(entry[0], indexOfSelectedInterval)} />}
-                        ></FormControlLabel>
-                      </TableCell>
-                      <TableCell padding='none' size='small'>
-                        <Checkbox
-                          size='small'
-                          color='primary'
-                          disabled={indexOfSelectedInterval === -1}
-                          checked={indexOfSelectedInterval !== -1 && this.state.selectedIntervalOptionalPairs[indexOfSelectedInterval].isOptional}
-                          onChange={() => this.onIntervalOptionalChecked(entry[0], indexOfSelectedInterval)} />
-                      </TableCell>
-                    </TableRow>
-                  )
-                })
-              }
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </FormControl>
-    )
+    return <ChordMenu
+      tuning={this.state.tuning}
+      maxFretNum={this.state.maxFretNum}
+      mapFromIntervalEnumToString={this.state.mapFromIntervalEnumToString}
+      mapFromNoteLetterEnumToString={this.state.mapFromNoteLetterEnumToString}
+      menuIsOpen={this.state.menuIsOpen}
+      menuAnchorEl={this.state.menuAnchorEl}
+      menuCloseCount={this.state.menuCloseCount}
+      selectedTab={this.state.selectedTab}
+      selectedChordRoot={this.state.selectedChordRoot}
+      excludeChordsWithOpenNotes={this.state.excludeChordsWithOpenNotes}
+      selectedIntervalOptionalPairs={this.state.selectedIntervalOptionalPairs}
+      suggestedChords={this.state.suggestedChords}
+      onTabSelected={this.onTabSelected}
+      onChordRootSelected={this.onChordRootSelected}
+      onIntervalChecked={this.onIntervalChecked}
+      onIntervalOptionalChecked={this.onIntervalOptionalChecked}
+      onExcludeChordsWithOpenNotesChecked={this.onExcludeChordsWithOpenNotesChecked}
+      onGetChordsClick={this.onGetChordsClick}
+      onSuggestedChordNoteClick={this.onSuggestedChordNoteClick}
+      onCloseMenu={this.closeMenu} />
   }
 }
 

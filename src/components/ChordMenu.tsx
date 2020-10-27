@@ -1,6 +1,6 @@
 import React from 'react';
 import Draggable from 'react-draggable';
-import { Box, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, MenuItem, Popover, Select, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, Typography } from '@material-ui/core';
+import { AppBar, Box, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, MenuItem, Popover, Select, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, Typography } from '@material-ui/core';
 
 import { IIntervalOptionalPair, Interval } from '../services/chord-melody-service';
 import { INote, ITabNoteLocation, NoteLetter, Tablature } from '../submodules/tablature-react/src/tablature/tablature';
@@ -61,10 +61,12 @@ function getChordMelodyOptionsMenu(props: IChordMenuProps): JSX.Element {
 
   return (
     <>
-      <Tabs value={props.selectedTab} onChange={props.onTabSelected}>
-        <Tab label="Options" />
-        <Tab label="Advanced" />
-      </Tabs>
+      <AppBar position="relative">
+        <Tabs value={props.selectedTab} onChange={props.onTabSelected}>
+          <Tab label="Options" />
+          <Tab label="Advanced" />
+        </Tabs>
+      </AppBar>
       <TabPanel value={props.selectedTab} index={0}>
         <div className={noteMenuCss}>
           {getChordMelodySelectMenu(props)}

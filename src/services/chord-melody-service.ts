@@ -6,10 +6,8 @@ export class ChordMelodyService implements IChordMelodyService {
 
     const noteLetterOptionalPairs: INoteLetterOptionalPair[] = this.getNoteLetterOptionalPairs(chordRoot, intervalOptionalPairs);
 
-    const noteLetterOptionalPairsIncludingMelody: INoteLetterOptionalPair[] = this.addMelodyNoteToRequiredNotes(tuning, melodyStringedNote, noteLetterOptionalPairs);
-
     const fretsOfNotesOnAllStrings: (number | null)[][] = this.getsFretsOfNotesOnAllStrings(
-      noteLetterOptionalPairsIncludingMelody.map((pair: INoteLetterOptionalPair) => pair.noteLetter),
+      noteLetterOptionalPairs.map((pair: INoteLetterOptionalPair) => pair.noteLetter),
       tuning,
       numFrets,
       melodyStringedNote,
@@ -18,7 +16,7 @@ export class ChordMelodyService implements IChordMelodyService {
 
     const allCombos: (number | null)[][] = ArrayUtilities.getAllCombinations(fretsOfNotesOnAllStrings);
 
-    const requiredNoteLetters = noteLetterOptionalPairsIncludingMelody
+    const requiredNoteLetters = noteLetterOptionalPairs
       .filter((pair: INoteLetterOptionalPair) => !pair.isOptional)
       .map((pair: INoteLetterOptionalPair) => pair.noteLetter);
 
@@ -40,20 +38,6 @@ export class ChordMelodyService implements IChordMelodyService {
         isOptional: intervalOptionalPair.isOptional
       };
     });
-  }
-
-  private addMelodyNoteToRequiredNotes(tuning: INote[], melodyStringedNote: IStringedNote, noteLetterOptionalPairs: INoteLetterOptionalPair[]): INoteLetterOptionalPair[] {
-    const newNoteLetterOptionalPairs: INoteLetterOptionalPair[] = [...noteLetterOptionalPairs];
-    const melodyNote: INote = this.getNoteFromStringedNote(tuning, melodyStringedNote);
-
-    if (!newNoteLetterOptionalPairs.map(x => x.noteLetter).includes(melodyNote.letter)) {
-      newNoteLetterOptionalPairs.push({
-        noteLetter: melodyNote.letter,
-        isOptional: false
-      });
-    }
-
-    return newNoteLetterOptionalPairs;
   }
 
   private getNoteFromStringedNote(tuning: INote[], stringedNote: IStringedNote): INote {

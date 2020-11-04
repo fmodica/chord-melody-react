@@ -38,7 +38,7 @@
 
 .note-menu.chord-root-selected .chord-root-menu,
 .note-menu .MuiFormHelperText-root {
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .note-menu .chord-root-menu {
@@ -46,7 +46,7 @@
 }
 
 .note-menu .chord-root-menu .MuiOutlinedInput-input {
-  padding: 9.25px 7px;
+  padding: 8px;
 }
 
 .note-menu .MuiFormControl-root {
@@ -63,7 +63,7 @@
 
 .note-menu .MuiButtonBase-root.MuiCheckbox-root {
   width: auto;
-  padding: 6px 6px 6px 0px;
+  padding: 4px 4px 4px 0px;
 }
 
 .note-menu .MuiFormControlLabel-root {

@@ -16,7 +16,6 @@ const ChordMenu: React.FC<IChordMenuProps> = (props: IChordMenuProps) => {
       <Popover
         open={props.menuIsOpen}
         anchorEl={props.menuAnchorEl}
-        onClose={props.onCloseMenu}
         anchorOrigin={{
           vertical: 'bottom',
           horizontal: 'right',

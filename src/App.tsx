@@ -29,7 +29,7 @@ export default class App extends Component<IAppProps, IAppState> {
             editorIsFocused={this.state.editorIsFocused}
             chords={this.state.chords}
             tuning={this.state.tuning}
-            maxFretNum={this.state.maxFretNum}
+            maxFretNum={this.state.maxTabFret}
             notesPerMeasure={this.state.notesPerMeasure}
             mapFromNoteLetterEnumToString={this.state.mapFromNoteLetterEnumToString}
             focusedNote={this.state.focusedNote}
@@ -155,6 +155,26 @@ export default class App extends Component<IAppProps, IAppState> {
     });
   }
 
+  onMinFretChanged = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    const value: number = parseInt(event.target.value);
+
+    if (value < 0 || value > this.state.maxTabFret /* || value > this.state.maxFret */) {
+      return;
+    }
+
+    this.setState({ minFret: value });
+  }
+
+  onMaxFretChanged = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    const value: number = parseInt(event.target.value);
+
+    if (value < 0 || value > this.state.maxTabFret /* || value < this.state.minFret */) {
+      return;
+    }
+
+    this.setState({ maxFret: value });
+  }
+
   onGetChordsClick = (): void => {
     if (this.state.focusedNote === null) {
       return;
@@ -201,6 +221,8 @@ export default class App extends Component<IAppProps, IAppState> {
       24,
       melodyStringedNote,
       this.state.maxFretDistance,
+      this.state.minFret,
+      this.state.maxFret,
       this.state.excludeChordsWithOpenNotes
     );
 
@@ -258,6 +280,7 @@ export default class App extends Component<IAppProps, IAppState> {
   private getInitialState(): IAppState {
     return {
       editorIsFocused: true,
+      // Make this tuning.length
       chords: this.getEmptyChords(32, 6),
       focusedNote: {
         chordIndex: 0,
@@ -271,7 +294,10 @@ export default class App extends Component<IAppProps, IAppState> {
         { letter: NoteLetter.A, octave: 2 },
         { letter: NoteLetter.E, octave: 2 }
       ],
-      maxFretNum: 24,
+      maxTabFret: 24,
+      minFret: 0,
+      // Reuse maxFretNum
+      maxFret: 24,
       notesPerMeasure: 8,
       mapFromNoteLetterEnumToString: new Map(
         [
@@ -332,7 +358,9 @@ export default class App extends Component<IAppProps, IAppState> {
   private getMenuEl(): JSX.Element | null {
     return <ChordMenu
       tuning={this.state.tuning}
-      maxFretNum={this.state.maxFretNum}
+      maxTabFret={this.state.maxTabFret}
+      minFret={this.state.minFret}
+      maxFret={this.state.maxFret}
       mapFromIntervalEnumToString={this.state.mapFromIntervalEnumToString}
       mapFromNoteLetterEnumToString={this.state.mapFromNoteLetterEnumToString}
       menuIsOpen={this.state.menuIsOpen}
@@ -347,6 +375,8 @@ export default class App extends Component<IAppProps, IAppState> {
       onChordRootSelected={this.onChordRootSelected}
       onIntervalChecked={this.onIntervalChecked}
       onIntervalOptionalChecked={this.onIntervalOptionalChecked}
+      onMinFretChanged={this.onMinFretChanged}
+      onMaxFretChanged={this.onMaxFretChanged}
       onExcludeChordsWithOpenNotesChecked={this.onExcludeChordsWithOpenNotesChecked}
       onGetChordsClick={this.onGetChordsClick}
       onSuggestedChordNoteClick={this.onSuggestedChordNoteClick}
@@ -361,7 +391,9 @@ interface IAppState {
   chords: (number | null)[][];
   focusedNote: ITabNoteLocation;
   tuning: INote[];
-  maxFretNum: number;
+  maxTabFret: number;
+  minFret: number;
+  maxFret: number;
   notesPerMeasure: number | null;
   mapFromNoteLetterEnumToString: Map<NoteLetter, string>;
   mapFromIntervalEnumToString: Map<Interval, string>;

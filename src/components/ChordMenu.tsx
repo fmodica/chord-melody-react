@@ -1,6 +1,6 @@
 import React from 'react';
 import Draggable from 'react-draggable';
-import { AppBar, Box, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, MenuItem, Popover, Select, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, Typography } from '@material-ui/core';
+import { AppBar, Box, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, MenuItem, Popover, Select, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Typography } from '@material-ui/core';
 
 import { IIntervalOptionalPair, Interval } from '../services/chord-melody-service';
 import { INote, ITabNoteLocation, NoteLetter, Tablature } from '../submodules/tablature-react/src/tablature/tablature';
@@ -44,7 +44,7 @@ function getSuggestedChordsDisplay(props: IChordMenuProps): JSX.Element | null {
       editorIsFocused={false}
       chords={props.suggestedChords}
       tuning={props.tuning}
-      maxFretNum={props.maxFretNum}
+      maxFretNum={props.maxTabFret}
       notesPerMeasure={null}
       mapFromNoteLetterEnumToString={props.mapFromNoteLetterEnumToString}
       focusedNote={null}
@@ -83,8 +83,20 @@ function getChordMelodyOptionsMenu(props: IChordMenuProps): JSX.Element {
       </TabPanel>
       <TabPanel value={props.selectedTab} index={1}>
         <div className='note-menu'>
+          <TextField
+            label="Min fret"
+            type="number"
+            value={props.minFret}
+            onChange={props.onMinFretChanged} />
+
+          <TextField
+            label="Max fret"
+            type="number"
+            value={props.maxFret}
+            onChange={props.onMaxFretChanged} />
+
           <FormControlLabel
-            label={'Exclude chords with open notes'}
+            label="Exclude chords with open notes"
             labelPlacement="end"
             control={
               <Checkbox
@@ -179,7 +191,9 @@ function getSubmitButton(props: IChordMenuProps): JSX.Element {
 
 interface IChordMenuProps {
   tuning: INote[];
-  maxFretNum: number;
+  maxTabFret: number;
+  minFret: number;
+  maxFret: number;
   mapFromNoteLetterEnumToString: Map<NoteLetter, string>;
   mapFromIntervalEnumToString: Map<Interval, string>;
   menuIsOpen: boolean;
@@ -195,6 +209,8 @@ interface IChordMenuProps {
   onIntervalChecked(interval: Interval, indexOfSelectedInterval: number): void;
   onIntervalOptionalChecked(interval: Interval, indexOfSelectedInterval: number): void;
   onExcludeChordsWithOpenNotesChecked(): void;
+  onMinFretChanged(event: React.ChangeEvent<HTMLInputElement>): void;
+  onMaxFretChanged(event: React.ChangeEvent<HTMLInputElement>): void;
   onGetChordsClick(): void;
   onSuggestedChordNoteClick(newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void;
   onCloseMenu(): void;

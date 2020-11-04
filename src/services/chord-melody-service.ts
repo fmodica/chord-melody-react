@@ -1,7 +1,17 @@
 import { ArrayUtilities } from "./array-utilities";
 
 export class ChordMelodyService implements IChordMelodyService {
-  getChords(chordRoot: NoteLetter, intervalOptionalPairs: IIntervalOptionalPair[], tuning: INote[], numFrets: number, melodyStringedNote: IStringedNote, maxFretDistance: number, excludeChordsWithOpenNotes: boolean): (number | null)[][] {
+  getChords(
+    chordRoot: NoteLetter,
+    intervalOptionalPairs: IIntervalOptionalPair[],
+    tuning: INote[],
+    numFrets: number,
+    melodyStringedNote: IStringedNote,
+    maxFretDistance: number,
+    minFret: number,
+    maxFret: number,
+    excludeChordsWithOpenNotes: boolean
+  ): (number | null)[][] {
     this.validate(intervalOptionalPairs, tuning, numFrets, maxFretDistance);
 
     const noteLetterOptionalPairs: INoteLetterOptionalPair[] = this.getNoteLetterOptionalPairs(chordRoot, intervalOptionalPairs);
@@ -11,6 +21,8 @@ export class ChordMelodyService implements IChordMelodyService {
       tuning,
       numFrets,
       melodyStringedNote,
+      minFret,
+      maxFret,
       excludeChordsWithOpenNotes
     );
 
@@ -47,18 +59,26 @@ export class ChordMelodyService implements IChordMelodyService {
     return melodyNote;
   }
 
-  private getsFretsOfNotesOnAllStrings(notes: NoteLetter[], tuning: INote[], numFrets: number, melodyStringedNote: IStringedNote, excludeChordsWithOpenNotes: boolean): (number | null)[][] {
+  private getsFretsOfNotesOnAllStrings(
+    notes: NoteLetter[],
+    tuning: INote[],
+    numFrets: number,
+    melodyStringedNote: IStringedNote,
+    minFret: number,
+    maxFret: number,
+    excludeChordsWithOpenNotes: boolean
+  ): (number | null)[][] {
     const fretsOfNotesOnAllStrings: (number | null)[][] = [];
     const requiredNotesSet: Set<NoteLetter> = new Set(notes);
     const melodyNote: INote = this.getNoteFromFret(tuning[melodyStringedNote.stringIndex], melodyStringedNote.fret);
 
-    for (let i = 0; i < tuning.length; i++) {
-      if (i === melodyStringedNote.stringIndex) {
+    for (let stringIndex = 0; stringIndex < tuning.length; stringIndex++) {
+      if (stringIndex === melodyStringedNote.stringIndex) {
         fretsOfNotesOnAllStrings.push([melodyStringedNote.fret]);
         continue;
       }
 
-      const fretsOfRequiredNotesOnString: (number | null)[] = this.getFretsOfNotesOnString(numFrets, tuning, i, requiredNotesSet, melodyNote, excludeChordsWithOpenNotes);
+      const fretsOfRequiredNotesOnString: (number | null)[] = this.getFretsOfNotesOnString(numFrets, tuning, stringIndex, requiredNotesSet, melodyNote, minFret, maxFret, excludeChordsWithOpenNotes);
       fretsOfNotesOnAllStrings.push(fretsOfRequiredNotesOnString);
     }
 
@@ -115,12 +135,28 @@ export class ChordMelodyService implements IChordMelodyService {
     return (max - min) <= maxFretDistance;
   }
 
-  private getFretsOfNotesOnString(numFrets: number, tuning: INote[], stringIndex: number, requiredNotesSet: Set<NoteLetter>, melodyNote: INote, excludeChordsWithOpenNotes: boolean): (number | null)[] {
+  private getFretsOfNotesOnString(
+    numFrets: number,
+    tuning: INote[],
+    stringIndex: number,
+    requiredNotesSet: Set<NoteLetter>,
+    melodyNote: INote,
+    minFret: number,
+    maxFret: number,
+    excludeChordsWithOpenNotes: boolean
+  ): (number | null)[] {
     const fretsOfRequiredNotesOnString: (number | null)[] = [null];
     const melodyNoteValue: number = this.getNoteValue(melodyNote);
-    const startFret = excludeChordsWithOpenNotes ? 1 : 0;
 
-    for (let i = startFret; i <= numFrets; i++) {
+    for (let i = 0; i <= maxFret; i++) {
+      if (i === 0 && excludeChordsWithOpenNotes) {
+        continue;
+      }
+
+      if (i < minFret) {
+        continue;
+      }
+
       let note = this.getNoteFromFret(tuning[stringIndex], i);
 
       if (requiredNotesSet.has(note.letter) && this.getNoteValue(note) <= melodyNoteValue) {
@@ -233,6 +269,8 @@ export interface IChordMelodyService {
     numFrets: number,
     melodyNote: IStringedNote,
     maxFretDistance: number,
+    minFret: number,
+    maxFret: number,
     excludeChordsWithOpenNotes: boolean
   ): (number | null)[][];
 }

@@ -19,9 +19,21 @@
   margin-left: 20px;
 }
 
-.note-menu {
-  padding: 10px;
-  width: 200px;
+h2.MuiTypography-root {
+  font-size: .9rem !important;
+  text-align: center;
+} 
+
+.MuiDialog-paperWidthSm {
+  max-width: 240px !important;
+}
+
+.has-suggested-chords .MuiDialog-paperWidthSm {
+  max-width: 90% !important;
+}
+
+.note-menu .MuiFormHelperText-root {
+  text-align: center;
 }
 
 .MuiTab-root {
@@ -32,11 +44,6 @@
   width: 100%;
 }
 
-.note-menu .MuiFormHelperText-root {
-  text-align: center;
-}
-
-.note-menu.chord-root-selected .chord-root-menu,
 .note-menu .MuiFormHelperText-root {
   margin-bottom: 4px;
 }
@@ -79,17 +86,12 @@
   z-index: 1;
 }
 
-.MuiPopover-root .MuiPopover-paper {
-  max-width: 50%;
-  min-width: 175px;
+.MuiDialogContent-root {
+  padding: 10px !important;
 }
 
-.MuiPaper-root.MuiPopover-paper {
-  cursor: grab;
-}
-
-.MuiPaper-root.MuiPopover-paper:active {
-  cursor: grabbing;
+.MuiDialogTitle-root {
+  padding: 10px 10px 0 10px !important;
 }
 
 .suggested-chords {
@@ -103,12 +105,4 @@
 
 .suggested-chords .chord:hover {
   background-color: #fff2ac;
-}
-
-.suggested-chords .pick-chord {
-  margin: 20px 0 0 0;
-}
-
-.suggested-chords .tablature {
-  padding: 20px;
 }

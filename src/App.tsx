@@ -281,7 +281,7 @@ export default class App extends Component<IAppProps, IAppState> {
     return {
       editorIsFocused: true,
       // Make this tuning.length
-      chords: this.getEmptyChords(32, 6),
+      chords: this.getEmptyChords(64, 6),
       focusedNote: {
         chordIndex: 0,
         stringIndex: 0
@@ -298,7 +298,7 @@ export default class App extends Component<IAppProps, IAppState> {
       minFret: 0,
       // Reuse maxFretNum
       maxFret: 24,
-      notesPerMeasure: 8,
+      notesPerMeasure: 16,
       mapFromNoteLetterEnumToString: new Map(
         [
           [NoteLetter.Aflat, 'Ab'],

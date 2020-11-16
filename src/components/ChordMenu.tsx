@@ -202,8 +202,6 @@ interface IChordMenuProps {
   mapFromNoteLetterEnumToString: Map<NoteLetter, string>;
   mapFromIntervalEnumToString: Map<Interval, string>;
   menuIsOpen: boolean;
-  menuAnchorEl: Element | null;
-  menuCloseCount: number;
   selectedTab: number;
   selectedChordRoot: NoteLetter | null;
   excludeChordsWithOpenNotes: boolean;

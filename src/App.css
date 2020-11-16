@@ -29,7 +29,7 @@ h2.MuiTypography-root {
 }
 
 .has-suggested-chords .MuiDialog-paperWidthSm {
-  max-width: 90% !important;
+  max-width: 50% !important;
 }
 
 .note-menu .MuiFormHelperText-root {

@@ -81,10 +81,7 @@ export default class App extends Component<IAppProps, IAppState> {
     if (this.state.menuIsOpen) {
       this.closeMenu();
     } else if (this.tabLocationsAreEqual(this.state.focusedNote, clickedNote) && fret !== null) {
-      this.setState({
-        menuIsOpen: true,
-        menuAnchorEl: e.target as Element
-      });
+      this.setState({ menuIsOpen: true });
     }
 
     this.setState({ focusedNote: clickedNote });
@@ -188,17 +185,7 @@ export default class App extends Component<IAppProps, IAppState> {
 
     // Reset the menu placement and contents after the animation is complete
     setTimeout(() => {
-      this.setState(state => {
-        return {
-          suggestedChords: null,
-          menuAnchorEl: null,
-          menuCloseCount: state.menuCloseCount + 1,
-          selectedTab: 0
-          // selectedChordRoot: null,
-          // selectedIntervalOptionalPairs: [],
-          // excludeChordsWithOpenNotes: false
-        };
-      });
+      this.setState({ suggestedChords: null });
     }, 200);
   }
 
@@ -332,8 +319,6 @@ export default class App extends Component<IAppProps, IAppState> {
         ]
       ),
       menuIsOpen: false,
-      menuAnchorEl: null,
-      menuCloseCount: 0,
       selectedTab: 0,
       selectedChordRoot: null,
       selectedIntervalOptionalPairs: [],
@@ -364,8 +349,6 @@ export default class App extends Component<IAppProps, IAppState> {
       mapFromIntervalEnumToString={this.state.mapFromIntervalEnumToString}
       mapFromNoteLetterEnumToString={this.state.mapFromNoteLetterEnumToString}
       menuIsOpen={this.state.menuIsOpen}
-      menuAnchorEl={this.state.menuAnchorEl}
-      menuCloseCount={this.state.menuCloseCount}
       selectedTab={this.state.selectedTab}
       selectedChordRoot={this.state.selectedChordRoot}
       excludeChordsWithOpenNotes={this.state.excludeChordsWithOpenNotes}
@@ -398,8 +381,6 @@ interface IAppState {
   mapFromNoteLetterEnumToString: Map<NoteLetter, string>;
   mapFromIntervalEnumToString: Map<Interval, string>;
   menuIsOpen: boolean;
-  menuAnchorEl: Element | null;
-  menuCloseCount: number;
   selectedTab: number;
   selectedChordRoot: NoteLetter | null;
   selectedIntervalOptionalPairs: IIntervalOptionalPair[];

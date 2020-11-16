@@ -19,7 +19,6 @@ export class ChordMelodyService implements IChordMelodyService {
     const fretsOfNotesOnAllStrings: (number | null)[][] = this.getsFretsOfNotesOnAllStrings(
       noteLetterOptionalPairs.map((pair: INoteLetterOptionalPair) => pair.noteLetter),
       tuning,
-      numFrets,
       melodyStringedNote,
       minFret,
       maxFret,
@@ -72,7 +71,6 @@ export class ChordMelodyService implements IChordMelodyService {
   private getsFretsOfNotesOnAllStrings(
     notes: NoteLetter[],
     tuning: INote[],
-    numFrets: number,
     melodyStringedNote: IStringedNote,
     minFret: number,
     maxFret: number,
@@ -88,7 +86,7 @@ export class ChordMelodyService implements IChordMelodyService {
         continue;
       }
 
-      const fretsOfRequiredNotesOnString: (number | null)[] = this.getFretsOfNotesOnString(numFrets, tuning, stringIndex, requiredNotesSet, melodyNote, minFret, maxFret, excludeChordsWithOpenNotes);
+      const fretsOfRequiredNotesOnString: (number | null)[] = this.getFretsOfNotesOnString(tuning, stringIndex, requiredNotesSet, melodyNote, minFret, maxFret, excludeChordsWithOpenNotes);
       fretsOfNotesOnAllStrings.push(fretsOfRequiredNotesOnString);
     }
 
@@ -146,7 +144,6 @@ export class ChordMelodyService implements IChordMelodyService {
   }
 
   private getFretsOfNotesOnString(
-    numFrets: number,
     tuning: INote[],
     stringIndex: number,
     requiredNotesSet: Set<NoteLetter>,
@@ -163,7 +160,7 @@ export class ChordMelodyService implements IChordMelodyService {
         continue;
       }
 
-      if (i < minFret) {
+      if (i !== 0 && i < minFret) {
         continue;
       }
 

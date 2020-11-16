@@ -216,6 +216,32 @@ export default class App extends Component<IAppProps, IAppState> {
     const suggestedChordsRequiringFourFingersMax = suggestedChords.filter(chord => this.chordPlayabilityService.getPlayability(chord) <= 4);
 
     suggestedChordsRequiringFourFingersMax.sort((a, b) => {
+      // Sort by lowest note value
+
+      const aWithoutNulls: { fret: number | null, index: number }[] = a
+        .map((fret, index) => ({ fret, index }))
+        .filter(fretIndexPair => fretIndexPair.fret !== null);
+
+      const bWithoutNulls: { fret: number | null, index: number }[] = b
+        .map((fret, index) => ({ fret, index }))
+        .filter(fretIndexPair => fretIndexPair.fret !== null);
+
+      const { min: aMinNoteValue } = ArrayUtilities.getMinMax(
+        aWithoutNulls.map((fretIndexPair: { fret: number | null, index: number }) => {
+          return this.chordMelodyService.getNoteValue(this.chordMelodyService.getNoteFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret as number));
+        })
+      );
+
+      const { min: bMinNoteValue } = ArrayUtilities.getMinMax(
+        bWithoutNulls.map((fretIndexPair: { fret: number | null, index: number }) => {
+          return this.chordMelodyService.getNoteValue(this.chordMelodyService.getNoteFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret as number));
+        })
+      );
+
+      if (aMinNoteValue !== bMinNoteValue) {
+        return aMinNoteValue - bMinNoteValue;
+      }
+
       // Sort by playability 
 
       const playabilityA = this.chordPlayabilityService.getPlayability(a);
@@ -227,17 +253,19 @@ export default class App extends Component<IAppProps, IAppState> {
 
       // Same playability, sort by number of notes
 
-      const aWithoutNulls = a.filter(fret => fret !== null);
-      const bWithoutNulls = b.filter(fret => fret !== null);
-
       if (aWithoutNulls.length !== bWithoutNulls.length) {
         return aWithoutNulls.length - bWithoutNulls.length;
       }
 
       // Same number of notes, sort by minimum non-zero fret
 
-      const aWithoutNullsOrOpens = aWithoutNulls.filter(fret => fret !== 0);
-      const bWithoutNullsOrOpens = bWithoutNulls.filter(fret => fret !== 0);
+      const aWithoutNullsOrOpens = aWithoutNulls
+        .filter(fretIndexPair => fretIndexPair.fret !== 0)
+        .map(fretIndexPair => fretIndexPair.fret);
+
+      const bWithoutNullsOrOpens = bWithoutNulls
+        .filter(fretIndexPair => fretIndexPair.fret !== 0)
+        .map(fretIndexPair => fretIndexPair.fret);
 
       const { min: minNonZeroFretA } = ArrayUtilities.getMinMax(aWithoutNullsOrOpens as number[]);
       const { min: minNonZeroFretB } = ArrayUtilities.getMinMax(bWithoutNullsOrOpens as number[]);

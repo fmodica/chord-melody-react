@@ -41,6 +41,23 @@ export class ChordMelodyService implements IChordMelodyService {
     return filteredCombos;
   }
 
+  // TODO: Move these to a common music theory service
+  public getNoteValue(note: INote): number {
+    return (note.octave * 12) + note.letter;
+  }
+
+  public getNoteFromFret(tuningNote: INote, fret: number): INote {
+    const noteLetter = tuningNote.letter + fret;
+    const octaveFactor = Math.floor(noteLetter / 12);
+    const newOctave = tuningNote.octave + octaveFactor;
+    const newNoteLetter = noteLetter - (12 * octaveFactor);
+
+    return {
+      letter: newNoteLetter,
+      octave: newOctave
+    }
+  }
+
   private getNoteLetterOptionalPairs(chordRoot: NoteLetter, intervalOptionalPairs: IIntervalOptionalPair[]): INoteLetterOptionalPair[] {
     return intervalOptionalPairs.map((intervalOptionalPair: IIntervalOptionalPair) => {
       const noteLetter: NoteLetter = this.getNoteLetterFromRootAndInterval(chordRoot, intervalOptionalPair.interval);
@@ -50,13 +67,6 @@ export class ChordMelodyService implements IChordMelodyService {
         isOptional: intervalOptionalPair.isOptional
       };
     });
-  }
-
-  private getNoteFromStringedNote(tuning: INote[], stringedNote: IStringedNote): INote {
-    const openNote = tuning[stringedNote.stringIndex];
-    const melodyNote = this.getNoteFromFret(openNote, stringedNote.fret);
-
-    return melodyNote;
   }
 
   private getsFretsOfNotesOnAllStrings(
@@ -193,22 +203,6 @@ export class ChordMelodyService implements IChordMelodyService {
       ? (note - 12)
       : note
   }
-
-  private getNoteFromFret(tuningNote: INote, fret: number): INote {
-    const noteLetter = tuningNote.letter + fret;
-    const octaveFactor = Math.floor(noteLetter / 12);
-    const newOctave = tuningNote.octave + octaveFactor;
-    const newNoteLetter = noteLetter - (12 * octaveFactor);
-
-    return {
-      letter: newNoteLetter,
-      octave: newOctave
-    }
-  }
-
-  private getNoteValue(note: INote): number {
-    return (note.octave * 12) + note.letter;
-  }
 }
 
 export enum NoteLetter {
@@ -273,4 +267,6 @@ export interface IChordMelodyService {
     maxFret: number,
     excludeChordsWithOpenNotes: boolean
   ): (number | null)[][];
+  getNoteValue(note: INote): number;
+  getNoteFromFret(tuningNote: INote, fret: number): INote;
 }

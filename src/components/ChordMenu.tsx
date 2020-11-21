@@ -29,15 +29,15 @@ const ChordMenu: React.FC<IChordMenuProps> = (props: IChordMenuProps) => {
 
 function PaperComponent(props: any) {
   return (
-    <Draggable handle="#draggable-dialog-title" cancel={'[class*="MuiDialogContent-root"]'}>
+    <Draggable handle="#draggable-dialog-title" cancel={'[class*="MuiDialogContent-root"]'}> 
       <Paper {...props} />
     </Draggable>
   );
 }
 
-function getSuggestedChordsDisplay(props: IChordMenuProps): { content: JSX.Element | null, title: string } {
+function getSuggestedChordsDisplay(props: IChordMenuProps): { content: JSX.Element | null, title: JSX.Element } {
   if (!props.suggestedChords?.length) {
-    return { content: <div>No chords found</div>, title: '' };
+    return { content: <div>No chords found</div>, title: <></> };
   }
 
   return {
@@ -57,21 +57,15 @@ function getSuggestedChordsDisplay(props: IChordMenuProps): { content: JSX.Eleme
           onEditorFocus={() => { }}
         ></Tablature>
       </div>,
-    title: 'Pick a chord'
+    title: <>Pick a chord</>
   };
 }
 
-function getChordMelodyOptionsMenu(props: IChordMenuProps): { content: JSX.Element | null, title: string } {
+function getChordMelodyOptionsMenu(props: IChordMenuProps): { content: JSX.Element | null, title: JSX.Element } {
   const noteMenuCss = `note-menu ${props.selectedChordRoot === null ? '' : 'chord-root-selected'}`;
 
   return {
     content: <>
-      <AppBar position="relative">
-        <Tabs value={props.selectedTab} onChange={props.onTabSelected}>
-          <Tab label="Options" />
-          <Tab label="Advanced" />
-        </Tabs>
-      </AppBar>
       <TabPanel value={props.selectedTab} index={0}>
         <div className={noteMenuCss}>
           {getChordMelodySelectMenu(props)}
@@ -113,7 +107,12 @@ function getChordMelodyOptionsMenu(props: IChordMenuProps): { content: JSX.Eleme
         </div>
       </TabPanel>
     </>,
-    title: `Let's build a chord under this melody note.`
+    title: <AppBar position="relative">
+      <Tabs value={props.selectedTab} onChange={props.onTabSelected}>
+        <Tab label="Options" />
+        <Tab label="Advanced" />
+      </Tabs>
+    </AppBar>
   };
 }
 
@@ -178,6 +177,7 @@ function getChordMelodySelectMenu(props: IChordMenuProps): JSX.Element {
 
   return (
     <FormControl variant='outlined'>
+      <FormHelperText>Let's build a chord under this melody note.</FormHelperText>
       <FormHelperText>First select a chord root.</FormHelperText>
       <Select className='chord-root-menu' onChange={props.onChordRootSelected} value={props.selectedChordRoot === null ? '' : props.selectedChordRoot}>
         {

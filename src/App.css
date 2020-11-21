@@ -45,11 +45,15 @@ h2.MuiTypography-root {
 }
 
 .note-menu .MuiFormHelperText-root {
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+}
+
+.note-menu.chord-root-selected .chord-root-menu {
+  margin-bottom: 6px;
 }
 
 .note-menu .chord-root-menu {
-  margin-bottom: 0;
+  margin-bottom: 0px;
 }
 
 .note-menu .chord-root-menu .MuiOutlinedInput-input {
@@ -62,6 +66,7 @@ h2.MuiTypography-root {
 
 .note-menu .MuiTableContainer-root {
   overflow: hidden;
+  margin-bottom: 6px;
 }
 
 .note-menu .MuiButtonBase-root {

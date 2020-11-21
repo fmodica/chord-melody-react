@@ -110,6 +110,17 @@ function getChordMelodyOptionsMenu(props: IChordMenuProps): { content: JSX.Eleme
                 checked={props.excludeChordsWithOpenNotes}
                 onChange={props.onExcludeChordsWithOpenNotesChecked} />}
           ></FormControlLabel>
+
+          <FormControlLabel
+            label="Exclude chords with repeated note letters"
+            labelPlacement="end"
+            control={
+              <Checkbox
+                size='small'
+                color='primary'
+                checked={props.excludeChordsWithDuplicateNoteLetters}
+                onChange={props.onExcludeChordsWithDuplicateNoteLettersChecked} />}
+          ></FormControlLabel>
         </div>
       </TabPanel>
     </>,
@@ -205,6 +216,7 @@ interface IChordMenuProps {
   selectedTab: number;
   selectedChordRoot: NoteLetter | null;
   excludeChordsWithOpenNotes: boolean;
+  excludeChordsWithDuplicateNoteLetters: boolean;
   selectedIntervalOptionalPairs: IIntervalOptionalPair[];
   suggestedChords: (number | null)[][] | null;
   onTabSelected(event: React.ChangeEvent<{}>, newValue: number): void;
@@ -212,6 +224,7 @@ interface IChordMenuProps {
   onIntervalChecked(interval: Interval, indexOfSelectedInterval: number): void;
   onIntervalOptionalChecked(interval: Interval, indexOfSelectedInterval: number): void;
   onExcludeChordsWithOpenNotesChecked(): void;
+  onExcludeChordsWithDuplicateNoteLettersChecked(): void;
   onMinFretChanged(event: React.ChangeEvent<HTMLInputElement>): void;
   onMaxFretChanged(event: React.ChangeEvent<HTMLInputElement>): void;
   onGetChordsClick(): void;

@@ -152,6 +152,12 @@ export default class App extends Component<IAppProps, IAppState> {
     });
   }
 
+  onExcludeChordsWithDuplicateNoteLettersChecked = (): void => {
+    this.setState(state => {
+      return { excludeChordsWithDuplicateNoteLetters: !state.excludeChordsWithDuplicateNoteLetters };
+    });
+  }
+
   onMinFretChanged = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const value: number = parseInt(event.target.value);
 
@@ -210,7 +216,8 @@ export default class App extends Component<IAppProps, IAppState> {
       this.state.maxFretDistance,
       this.state.minFret,
       this.state.maxFret,
-      this.state.excludeChordsWithOpenNotes
+      this.state.excludeChordsWithOpenNotes,
+      this.state.excludeChordsWithDuplicateNoteLetters
     );
 
     const suggestedChordsRequiringFourFingersMax = suggestedChords.filter(chord => this.chordPlayabilityService.getPlayability(chord) <= 4);
@@ -351,6 +358,7 @@ export default class App extends Component<IAppProps, IAppState> {
       selectedChordRoot: null,
       selectedIntervalOptionalPairs: [],
       excludeChordsWithOpenNotes: false,
+      excludeChordsWithDuplicateNoteLetters: false,
       maxFretDistance: 4,
       suggestedChords: null
     };
@@ -380,6 +388,7 @@ export default class App extends Component<IAppProps, IAppState> {
       selectedTab={this.state.selectedTab}
       selectedChordRoot={this.state.selectedChordRoot}
       excludeChordsWithOpenNotes={this.state.excludeChordsWithOpenNotes}
+      excludeChordsWithDuplicateNoteLetters={this.state.excludeChordsWithDuplicateNoteLetters}
       selectedIntervalOptionalPairs={this.state.selectedIntervalOptionalPairs}
       suggestedChords={this.state.suggestedChords}
       onTabSelected={this.onTabSelected}
@@ -389,6 +398,7 @@ export default class App extends Component<IAppProps, IAppState> {
       onMinFretChanged={this.onMinFretChanged}
       onMaxFretChanged={this.onMaxFretChanged}
       onExcludeChordsWithOpenNotesChecked={this.onExcludeChordsWithOpenNotesChecked}
+      onExcludeChordsWithDuplicateNoteLettersChecked={this.onExcludeChordsWithDuplicateNoteLettersChecked}
       onGetChordsClick={this.onGetChordsClick}
       onSuggestedChordNoteClick={this.onSuggestedChordNoteClick}
       onCloseMenu={this.closeMenu} />
@@ -413,6 +423,7 @@ interface IAppState {
   selectedChordRoot: NoteLetter | null;
   selectedIntervalOptionalPairs: IIntervalOptionalPair[];
   excludeChordsWithOpenNotes: boolean;
+  excludeChordsWithDuplicateNoteLetters: boolean;
   maxFretDistance: number;
   // If null, we are not currently suggesting chords.
   // If empty, we are suggesting chords but there are none.

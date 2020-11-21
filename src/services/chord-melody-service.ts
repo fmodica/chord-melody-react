@@ -1,3 +1,4 @@
+import { ITabNoteLocation } from "../submodules/tablature-react/src/tablature/tablature";
 import { ArrayUtilities } from "./array-utilities";
 
 export class ChordMelodyService implements IChordMelodyService {
@@ -10,7 +11,8 @@ export class ChordMelodyService implements IChordMelodyService {
     maxFretDistance: number,
     minFret: number,
     maxFret: number,
-    excludeChordsWithOpenNotes: boolean
+    excludeChordsWithOpenNotes: boolean,
+    excludeChordsWithDuplicateNoteLetters: boolean
   ): (number | null)[][] {
     this.validate(intervalOptionalPairs, tuning, numFrets, maxFretDistance);
 
@@ -34,7 +36,7 @@ export class ChordMelodyService implements IChordMelodyService {
     const requiredNoteLetterSet = new Set<NoteLetter>(requiredNoteLetters);
 
     const filteredCombos: (number | null)[][] = allCombos.filter((chord: (number | null)[]) => {
-      return this.isValidChord(chord, tuning, requiredNoteLetterSet, maxFretDistance);
+      return this.isValidChord(chord, tuning, requiredNoteLetterSet, maxFretDistance, melodyStringedNote, excludeChordsWithDuplicateNoteLetters);
     });
 
     return filteredCombos;
@@ -93,12 +95,19 @@ export class ChordMelodyService implements IChordMelodyService {
     return fretsOfNotesOnAllStrings;
   }
 
-  private isValidChord(chord: (number | null)[], tuning: INote[], requiredNoteLetterSet: Set<NoteLetter>, maxFretDistance: number): boolean {
+  private isValidChord(
+    chord: (number | null)[],
+    tuning: INote[],
+    requiredNoteLetterSet: Set<NoteLetter>,
+    maxFretDistance: number,
+    melodyStringedNote: IStringedNote,
+    excludeChordsWithDuplicateNoteLetters: boolean
+  ): boolean {
     if (chord.length === 0) {
       throw new Error(`The chord has no elements.`);
     }
 
-    if (!this.meetsNotesRequirement(chord, tuning, requiredNoteLetterSet)) {
+    if (!this.meetsNotesRequirement(chord, tuning, requiredNoteLetterSet, melodyStringedNote, excludeChordsWithDuplicateNoteLetters)) {
       return false;
     }
 
@@ -109,8 +118,20 @@ export class ChordMelodyService implements IChordMelodyService {
     return true;
   }
 
-  private meetsNotesRequirement(chord: (number | null)[], tuning: INote[], requiredNoteLetterSet: Set<NoteLetter>): boolean {
-    const noteLetterSet = new Set<NoteLetter>();
+  private meetsNotesRequirement(
+    chord: (number | null)[],
+    tuning: INote[],
+    requiredNoteLetterSet: Set<NoteLetter>,
+    melodyStringedNote: IStringedNote,
+    excludeChordsWithDuplicateNoteLetters: boolean
+  ): boolean {
+    const chordRequiredNoteLetterSet = new Set<NoteLetter>();
+    const chordNoteLetterSet = new Set<NoteLetter>();
+    let melodyNoteCount = 0;
+
+    const melodyNoteLetter = this
+      .getNoteFromFret(tuning[melodyStringedNote.stringIndex], melodyStringedNote.fret)
+      .letter;
 
     for (let i = 0; i < chord.length; i++) {
       const fret: number | null = chord[i];
@@ -121,12 +142,22 @@ export class ChordMelodyService implements IChordMelodyService {
 
       const note: INote = this.getNoteFromFret(tuning[i], fret);
 
+      if (note.letter === melodyNoteLetter) {
+        melodyNoteCount++;
+      }
+
+      if (excludeChordsWithDuplicateNoteLetters && ((chordNoteLetterSet.has(note.letter) && note.letter !== melodyNoteLetter) || melodyNoteCount > 2)) {
+        return false;
+      }
+
+      chordNoteLetterSet.add(note.letter);
+
       if (requiredNoteLetterSet.has(note.letter)) {
-        noteLetterSet.add(note.letter);
+        chordRequiredNoteLetterSet.add(note.letter);
       }
     }
 
-    return noteLetterSet.size === requiredNoteLetterSet.size;
+    return chordRequiredNoteLetterSet.size === requiredNoteLetterSet.size;
   }
 
   private meetsLengthRequirement(chord: (number | null)[], maxFretDistance: number): boolean {
@@ -262,7 +293,8 @@ export interface IChordMelodyService {
     maxFretDistance: number,
     minFret: number,
     maxFret: number,
-    excludeChordsWithOpenNotes: boolean
+    excludeChordsWithOpenNotes: boolean,
+    excludeChordsWithDuplicateNoteLetters: boolean
   ): (number | null)[][];
   getNoteValue(note: INote): number;
   getNoteFromFret(tuningNote: INote, fret: number): INote;

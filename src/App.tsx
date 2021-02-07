@@ -213,67 +213,80 @@ export default class App extends Component<IAppProps, IAppState> {
       this.state.excludeChordsWithOpenNotes
     );
 
-    const suggestedChordsRequiringFourFingersMax = suggestedChords.filter(chord => this.chordPlayabilityService.getPlayability(chord) <= 4);
+    if (!suggestedChords?.length) {
+      return [];
+    }
 
-    suggestedChordsRequiringFourFingersMax.sort((a, b) => {
-      // Sort by lowest note value
+    const suggestedPlayableChords = suggestedChords.filter(chord => this.chordPlayabilityService.getPlayability(chord) <= 4);
 
-      const aWithoutNulls: { fret: number | null, index: number }[] = a
+    const mapFromLowestValueNoteToChords = new Map<number, (number | null)[][]>();
+
+    suggestedPlayableChords.forEach(chord => {
+      const chordWithoutNulls: { fret: number, index: number }[] = chord
         .map((fret, index) => ({ fret, index }))
-        .filter(fretIndexPair => fretIndexPair.fret !== null);
+        .filter(fretIndexPair => fretIndexPair.fret !== null) as { fret: number, index: number }[];
 
-      const bWithoutNulls: { fret: number | null, index: number }[] = b
-        .map((fret, index) => ({ fret, index }))
-        .filter(fretIndexPair => fretIndexPair.fret !== null);
-
-      const { min: aMinNoteValue } = ArrayUtilities.getMinMax(
-        aWithoutNulls.map((fretIndexPair: { fret: number | null, index: number }) => {
-          return this.chordMelodyService.getNoteValue(this.chordMelodyService.getNoteFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret as number));
+      const { min: minValue } = ArrayUtilities.getMinMax(
+        chordWithoutNulls.map((fretIndexPair: { fret: number, index: number }) => {
+          return this.chordMelodyService.getNoteValue(this.chordMelodyService.getNoteFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret));
         })
       );
 
-      const { min: bMinNoteValue } = ArrayUtilities.getMinMax(
-        bWithoutNulls.map((fretIndexPair: { fret: number | null, index: number }) => {
-          return this.chordMelodyService.getNoteValue(this.chordMelodyService.getNoteFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret as number));
-        })
-      );
-
-      if (aMinNoteValue !== bMinNoteValue) {
-        return aMinNoteValue - bMinNoteValue;
+      if (!mapFromLowestValueNoteToChords.has(minValue)) {
+        mapFromLowestValueNoteToChords.set(minValue, []);
       }
 
-      // Sort by playability 
-
-      const playabilityA = this.chordPlayabilityService.getPlayability(a);
-      const playabilityB = this.chordPlayabilityService.getPlayability(b);
-
-      if (playabilityA !== playabilityB) {
-        return playabilityA - playabilityB;
-      }
-
-      // Same playability, sort by number of notes
-
-      if (aWithoutNulls.length !== bWithoutNulls.length) {
-        return aWithoutNulls.length - bWithoutNulls.length;
-      }
-
-      // Same number of notes, sort by minimum non-zero fret
-
-      const aWithoutNullsOrOpens = aWithoutNulls
-        .filter(fretIndexPair => fretIndexPair.fret !== 0)
-        .map(fretIndexPair => fretIndexPair.fret);
-
-      const bWithoutNullsOrOpens = bWithoutNulls
-        .filter(fretIndexPair => fretIndexPair.fret !== 0)
-        .map(fretIndexPair => fretIndexPair.fret);
-
-      const { min: minNonZeroFretA } = ArrayUtilities.getMinMax(aWithoutNullsOrOpens as number[]);
-      const { min: minNonZeroFretB } = ArrayUtilities.getMinMax(bWithoutNullsOrOpens as number[]);
-
-      return minNonZeroFretA - minNonZeroFretB;
+      mapFromLowestValueNoteToChords.get(minValue)?.push(chord);
     });
 
-    return suggestedChordsRequiringFourFingersMax;
+    mapFromLowestValueNoteToChords.forEach(chords => {
+      chords.sort((a, b) => {
+        const aWithoutNulls: { fret: number, index: number }[] = a
+          .map((fret, index) => ({ fret, index }))
+          .filter(fretIndexPair => fretIndexPair.fret !== null) as { fret: number, index: number }[];
+
+        const bWithoutNulls: { fret: number, index: number }[] = b
+          .map((fret, index) => ({ fret, index }))
+          .filter(fretIndexPair => fretIndexPair.fret !== null) as { fret: number, index: number }[];
+
+        // Sort by chord length
+
+        if (aWithoutNulls.length !== bWithoutNulls.length) {
+          return aWithoutNulls.length - bWithoutNulls.length;
+        }
+
+        // Same chord length, sort by sum of non-bass note values
+
+        const { min: aMinNoteValue } = ArrayUtilities.getMinMax(
+          aWithoutNulls.map((fretIndexPair: { fret: number, index: number }) => {
+            return this.chordMelodyService.getNoteValue(this.chordMelodyService.getNoteFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret));
+          })
+        );
+
+        const { min: bMinNoteValue } = ArrayUtilities.getMinMax(
+          bWithoutNulls.map((fretIndexPair: { fret: number, index: number }) => {
+            return this.chordMelodyService.getNoteValue(this.chordMelodyService.getNoteFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret));
+          })
+        );
+
+        const aNoteValues: number[] = aWithoutNulls.map((fretIndexPair: { fret: number | null, index: number }) => {
+          return this.chordMelodyService.getNoteValue(this.chordMelodyService.getNoteFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret as number));
+        });
+
+        const bNoteValues: number[] = bWithoutNulls.map((fretIndexPair: { fret: number | null, index: number }) => {
+          return this.chordMelodyService.getNoteValue(this.chordMelodyService.getNoteFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret as number));
+        });
+
+        const aSum = aNoteValues.filter(noteValue => noteValue !== aMinNoteValue).reduce((a, b) => a + b, 0);
+        const bSum = bNoteValues.filter(noteValue => noteValue !== bMinNoteValue).reduce((a, b) => a + b, 0);
+
+        return bSum - aSum;
+      });
+
+      chords.push(...this.getEmptyChords(1, 6));
+    });
+
+    return Array.from(mapFromLowestValueNoteToChords.values()).flat();
   }
 
   private getFocusedNoteAsStringedNote(): IStringedNote | null {

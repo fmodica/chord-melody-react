@@ -207,7 +207,7 @@ export default class App extends Component<IAppProps, IAppState> {
       this.state.selectedChordRoot,
       this.state.selectedIntervalOptionalPairs,
       this.state.tuning,
-      24,
+      this.state.maxTabFret,
       melodyStringedNote,
       this.state.maxFretDistance,
       this.state.minFret,
@@ -282,26 +282,28 @@ export default class App extends Component<IAppProps, IAppState> {
   }
 
   private getInitialState(): IAppState {
+    const tuning: INote[] = [
+      { letter: NoteLetter.E, octave: 4 },
+      { letter: NoteLetter.B, octave: 3 },
+      { letter: NoteLetter.G, octave: 3 },
+      { letter: NoteLetter.D, octave: 3 },
+      { letter: NoteLetter.A, octave: 2 },
+      { letter: NoteLetter.E, octave: 2 }
+    ];
+
+    const maxTabFret = 24;
+
     return {
       editorIsFocused: true,
-      // Make this tuning.length
-      chords: this.getEmptyChords(64, 6),
+      chords: this.getEmptyChords(64, tuning.length),
       focusedNote: {
         chordIndex: 0,
         stringIndex: 0
       },
-      tuning: [
-        { letter: NoteLetter.E, octave: 4 },
-        { letter: NoteLetter.B, octave: 3 },
-        { letter: NoteLetter.G, octave: 3 },
-        { letter: NoteLetter.D, octave: 3 },
-        { letter: NoteLetter.A, octave: 2 },
-        { letter: NoteLetter.E, octave: 2 }
-      ],
-      maxTabFret: 24,
+      tuning,
+      maxTabFret: maxTabFret,
       minFret: 0,
-      // Reuse maxFretNum
-      maxFret: 24,
+      maxFret: maxTabFret,
       notesPerMeasure: 16,
       mapFromNoteLetterEnumToString: new Map(
         [
@@ -345,8 +347,8 @@ export default class App extends Component<IAppProps, IAppState> {
     };
   }
 
-  private getEmptyChords(numChords: number, numFrets: number): null[][] {
-    return new Array(numChords).fill(this.getAllNulls(numFrets));
+  private getEmptyChords(numChords: number, numStrings: number): null[][] {
+    return new Array(numChords).fill(this.getAllNulls(numStrings));
   }
 
   private getAllNulls = (size: number): null[] => {

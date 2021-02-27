@@ -1,6 +1,9 @@
 import { ArrayUtilities } from "./array-utilities";
+import { IMusicTheoryService, INote, MusicTheoryService, NoteLetter } from "./music-theory-service";
 
 export class ChordMelodyService implements IChordMelodyService {
+  private readonly musicTheoryService: IMusicTheoryService = new MusicTheoryService();
+
   getChords(
     chordRoot: NoteLetter,
     intervalOptionalPairs: IIntervalOptionalPair[],
@@ -40,23 +43,6 @@ export class ChordMelodyService implements IChordMelodyService {
     return filteredCombos;
   }
 
-  // TODO: Move these to a common music theory service
-  public getNoteValue(note: INote): number {
-    return (note.octave * 12) + note.letter;
-  }
-
-  public getNoteFromFret(tuningNote: INote, fret: number): INote {
-    const noteLetter = tuningNote.letter + fret;
-    const octaveFactor = Math.floor(noteLetter / 12);
-    const newOctave = tuningNote.octave + octaveFactor;
-    const newNoteLetter = noteLetter - (12 * octaveFactor);
-
-    return {
-      letter: newNoteLetter,
-      octave: newOctave
-    }
-  }
-
   private getNoteLetterOptionalPairs(chordRoot: NoteLetter, intervalOptionalPairs: IIntervalOptionalPair[]): INoteLetterOptionalPair[] {
     return intervalOptionalPairs.map((intervalOptionalPair: IIntervalOptionalPair) => {
       const noteLetter: NoteLetter = this.getNoteLetterFromRootAndInterval(chordRoot, intervalOptionalPair.interval);
@@ -78,7 +64,7 @@ export class ChordMelodyService implements IChordMelodyService {
   ): (number | null)[][] {
     const fretsOfNotesOnAllStrings: (number | null)[][] = [];
     const requiredNotesSet: Set<NoteLetter> = new Set(notes);
-    const melodyNote: INote = this.getNoteFromFret(tuning[melodyStringedNote.stringIndex], melodyStringedNote.fret);
+    const melodyNote: INote = this.musicTheoryService.getNoteFromFret(tuning[melodyStringedNote.stringIndex], melodyStringedNote.fret);
 
     for (let stringIndex = 0; stringIndex < tuning.length; stringIndex++) {
       if (stringIndex === melodyStringedNote.stringIndex) {
@@ -119,7 +105,7 @@ export class ChordMelodyService implements IChordMelodyService {
         continue;
       }
 
-      const note: INote = this.getNoteFromFret(tuning[i], fret);
+      const note: INote = this.musicTheoryService.getNoteFromFret(tuning[i], fret);
 
       if (requiredNoteLetterSet.has(note.letter)) {
         noteLetterSet.add(note.letter);
@@ -153,7 +139,7 @@ export class ChordMelodyService implements IChordMelodyService {
     excludeChordsWithOpenNotes: boolean
   ): (number | null)[] {
     const fretsOfRequiredNotesOnString: (number | null)[] = [null];
-    const melodyNoteValue: number = this.getNoteValue(melodyNote);
+    const melodyNoteValue: number = this.musicTheoryService.getNoteValue(melodyNote);
 
     for (let i = 0; i <= maxFret; i++) {
       if (i === 0 && excludeChordsWithOpenNotes) {
@@ -164,9 +150,9 @@ export class ChordMelodyService implements IChordMelodyService {
         continue;
       }
 
-      let note = this.getNoteFromFret(tuning[stringIndex], i);
+      let note = this.musicTheoryService.getNoteFromFret(tuning[stringIndex], i);
 
-      if (requiredNotesSet.has(note.letter) && this.getNoteValue(note) <= melodyNoteValue) {
+      if (requiredNotesSet.has(note.letter) && this.musicTheoryService.getNoteValue(note) <= melodyNoteValue) {
         fretsOfRequiredNotesOnString.push(i);
       }
     }
@@ -202,29 +188,9 @@ export class ChordMelodyService implements IChordMelodyService {
   }
 }
 
-export enum NoteLetter {
-  C,
-  Dflat,
-  D,
-  Eflat,
-  E,
-  F,
-  Gflat,
-  G,
-  Aflat,
-  A,
-  Bflat,
-  B
-}
-
 export interface IStringedNote {
   stringIndex: number;
   fret: number;
-}
-
-export interface INote {
-  letter: NoteLetter;
-  octave: number;
 }
 
 export enum Interval {
@@ -264,6 +230,4 @@ export interface IChordMelodyService {
     maxFret: number,
     excludeChordsWithOpenNotes: boolean
   ): (number | null)[][];
-  getNoteValue(note: INote): number;
-  getNoteFromFret(tuningNote: INote, fret: number): INote;
 }

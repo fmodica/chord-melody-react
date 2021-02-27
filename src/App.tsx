@@ -5,6 +5,7 @@ import Button from '@material-ui/core/Button';
 import { Tablature, ITabNoteLocation, INote, NoteLetter } from './submodules/tablature-react/src/tablature/tablature';
 import ChordMenu from './components/ChordMenu';
 import { IStringedNote, Interval, IIntervalOptionalPair, IChordMelodyService, ChordMelodyService } from './services/chord-melody-service';
+import { IFretIndexPair, IMusicTheoryService, MusicTheoryService } from './services/music-theory-service';
 import { ChordPlayabilityService, IChordPlayabilityService } from './services/chord-playability-service';
 import { ArrayUtilities } from './services/array-utilities';
 
@@ -14,6 +15,7 @@ export default class App extends Component<IAppProps, IAppState> {
   private readonly tabsKey: string = 'tabs';
   private readonly chordMelodyService: IChordMelodyService = new ChordMelodyService();
   private readonly chordPlayabilityService: IChordPlayabilityService = new ChordPlayabilityService();
+  private readonly musicTheoryService: IMusicTheoryService = new MusicTheoryService();
 
   constructor(props: IAppProps) {
     super(props);
@@ -222,15 +224,10 @@ export default class App extends Component<IAppProps, IAppState> {
     const mapFromLowestValueNoteToChords = new Map<number, (number | null)[][]>();
 
     suggestedPlayableChords.forEach(chord => {
-      const chordWithoutNulls: { fret: number, index: number }[] = chord
-        .map((fret, index) => ({ fret, index }))
-        .filter(fretIndexPair => fretIndexPair.fret !== null) as { fret: number, index: number }[];
+      const chordWithoutNulls: IFretIndexPair[] = this.musicTheoryService.getChordWithoutNulls(chord);
+      const noteValues: number[] = chordWithoutNulls.map(fretIndexPair => this.musicTheoryService.getNoteValueFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret as number));
 
-      const { min: minValue } = ArrayUtilities.getMinMax(
-        chordWithoutNulls.map((fretIndexPair: { fret: number, index: number }) => {
-          return this.chordMelodyService.getNoteValue(this.chordMelodyService.getNoteFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret));
-        })
-      );
+      const { min: minValue } = ArrayUtilities.getMinMax(noteValues);
 
       if (!mapFromLowestValueNoteToChords.has(minValue)) {
         mapFromLowestValueNoteToChords.set(minValue, []);
@@ -241,41 +238,20 @@ export default class App extends Component<IAppProps, IAppState> {
 
     mapFromLowestValueNoteToChords.forEach(chords => {
       chords.sort((a, b) => {
-        const aWithoutNulls: { fret: number, index: number }[] = a
-          .map((fret, index) => ({ fret, index }))
-          .filter(fretIndexPair => fretIndexPair.fret !== null) as { fret: number, index: number }[];
-
-        const bWithoutNulls: { fret: number, index: number }[] = b
-          .map((fret, index) => ({ fret, index }))
-          .filter(fretIndexPair => fretIndexPair.fret !== null) as { fret: number, index: number }[];
+        const aWithoutNulls: IFretIndexPair[] = this.musicTheoryService.getChordWithoutNulls(a);
+        const bWithoutNulls: IFretIndexPair[] = this.musicTheoryService.getChordWithoutNulls(b);
 
         // Sort by chord length
-
         if (aWithoutNulls.length !== bWithoutNulls.length) {
           return aWithoutNulls.length - bWithoutNulls.length;
         }
 
         // Same chord length, sort by sum of non-bass note values
+        const aNoteValues: number[] = aWithoutNulls.map(fretIndexPair => this.musicTheoryService.getNoteValueFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret as number));
+        const bNoteValues: number[] = bWithoutNulls.map(fretIndexPair => this.musicTheoryService.getNoteValueFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret as number));
 
-        const { min: aMinNoteValue } = ArrayUtilities.getMinMax(
-          aWithoutNulls.map((fretIndexPair: { fret: number, index: number }) => {
-            return this.chordMelodyService.getNoteValue(this.chordMelodyService.getNoteFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret));
-          })
-        );
-
-        const { min: bMinNoteValue } = ArrayUtilities.getMinMax(
-          bWithoutNulls.map((fretIndexPair: { fret: number, index: number }) => {
-            return this.chordMelodyService.getNoteValue(this.chordMelodyService.getNoteFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret));
-          })
-        );
-
-        const aNoteValues: number[] = aWithoutNulls.map((fretIndexPair: { fret: number | null, index: number }) => {
-          return this.chordMelodyService.getNoteValue(this.chordMelodyService.getNoteFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret as number));
-        });
-
-        const bNoteValues: number[] = bWithoutNulls.map((fretIndexPair: { fret: number | null, index: number }) => {
-          return this.chordMelodyService.getNoteValue(this.chordMelodyService.getNoteFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret as number));
-        });
+        const { min: aMinNoteValue } = ArrayUtilities.getMinMax(aNoteValues);
+        const { min: bMinNoteValue } = ArrayUtilities.getMinMax(bNoteValues);
 
         const aSum = aNoteValues.filter(noteValue => noteValue !== aMinNoteValue).reduce((a, b) => a + b, 0);
         const bSum = bNoteValues.filter(noteValue => noteValue !== bMinNoteValue).reduce((a, b) => a + b, 0);

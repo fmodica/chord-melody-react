@@ -8,6 +8,7 @@ import { IStringedNote, Interval, IIntervalOptionalPair, IChordMelodyService, Ch
 import { IMusicTheoryService, MusicTheoryService } from './services/music-theory-service';
 
 import './App.css';
+import { ArrayUtilities } from './services/array-utilities';
 
 export default class App extends Component<IAppProps, IAppState> {
   private readonly tabsKey: string = 'tabs';
@@ -58,6 +59,9 @@ export default class App extends Component<IAppProps, IAppState> {
     }
 
     const chords: IChord[] = JSON.parse(savedChordsStr);
+
+    let { max } = ArrayUtilities.getMinMax(chords.map(c => parseInt(c.id)));
+    this.id = ++max;
 
     this.onEdit(chords, this.state.focusedNote);
   }

@@ -5,16 +5,13 @@ import Button from '@material-ui/core/Button';
 import { Tablature, ITabNoteLocation, INote, NoteLetter } from './submodules/tablature-react/src/tablature/tablature';
 import ChordMenu from './components/ChordMenu';
 import { IStringedNote, Interval, IIntervalOptionalPair, IChordMelodyService, ChordMelodyService } from './services/chord-melody-service';
-import { IFretIndexPair, IMusicTheoryService, MusicTheoryService } from './services/music-theory-service';
-import { ChordPlayabilityService, IChordPlayabilityService } from './services/chord-playability-service';
-import { ArrayUtilities } from './services/array-utilities';
+import { IMusicTheoryService, MusicTheoryService } from './services/music-theory-service';
 
 import './App.css';
 
 export default class App extends Component<IAppProps, IAppState> {
   private readonly tabsKey: string = 'tabs';
   private readonly chordMelodyService: IChordMelodyService = new ChordMelodyService();
-  private readonly chordPlayabilityService: IChordPlayabilityService = new ChordPlayabilityService();
   private readonly musicTheoryService: IMusicTheoryService = new MusicTheoryService();
 
   constructor(props: IAppProps) {
@@ -212,57 +209,11 @@ export default class App extends Component<IAppProps, IAppState> {
       this.state.maxFretDistance,
       this.state.minFret,
       this.state.maxFret,
-      this.state.excludeChordsWithOpenNotes
+      this.state.excludeChordsWithOpenNotes,
+      4
     );
 
-    if (!suggestedChords?.length) {
-      return [];
-    }
-
-    const suggestedPlayableChords = suggestedChords.filter(chord => this.chordPlayabilityService.getPlayability(chord) <= 4);
-
-    const mapFromLowestValueNoteToChords = new Map<number, (number | null)[][]>();
-
-    suggestedPlayableChords.forEach(chord => {
-      const chordWithoutNulls: IFretIndexPair[] = this.musicTheoryService.getChordWithoutNulls(chord);
-      const noteValues: number[] = chordWithoutNulls.map(fretIndexPair => this.musicTheoryService.getNoteValueFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret as number));
-
-      const { min: minValue } = ArrayUtilities.getMinMax(noteValues);
-
-      if (!mapFromLowestValueNoteToChords.has(minValue)) {
-        mapFromLowestValueNoteToChords.set(minValue, []);
-      }
-
-      mapFromLowestValueNoteToChords.get(minValue)?.push(chord);
-    });
-
-    mapFromLowestValueNoteToChords.forEach(chords => {
-      chords.sort((a, b) => {
-        const aWithoutNulls: IFretIndexPair[] = this.musicTheoryService.getChordWithoutNulls(a);
-        const bWithoutNulls: IFretIndexPair[] = this.musicTheoryService.getChordWithoutNulls(b);
-
-        // Sort by chord length
-        if (aWithoutNulls.length !== bWithoutNulls.length) {
-          return aWithoutNulls.length - bWithoutNulls.length;
-        }
-
-        // Same chord length, sort by sum of non-bass note values
-        const aNoteValues: number[] = aWithoutNulls.map(fretIndexPair => this.musicTheoryService.getNoteValueFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret as number));
-        const bNoteValues: number[] = bWithoutNulls.map(fretIndexPair => this.musicTheoryService.getNoteValueFromFret(this.state.tuning[fretIndexPair.index], fretIndexPair.fret as number));
-
-        const { min: aMinNoteValue } = ArrayUtilities.getMinMax(aNoteValues);
-        const { min: bMinNoteValue } = ArrayUtilities.getMinMax(bNoteValues);
-
-        const aSum = aNoteValues.filter(noteValue => noteValue !== aMinNoteValue).reduce((a, b) => a + b, 0);
-        const bSum = bNoteValues.filter(noteValue => noteValue !== bMinNoteValue).reduce((a, b) => a + b, 0);
-
-        return bSum - aSum;
-      });
-
-      chords.push(...this.getEmptyChords(1, 6));
-    });
-
-    return Array.from(mapFromLowestValueNoteToChords.values()).flat();
+    return suggestedChords;
   }
 
   private getFocusedNoteAsStringedNote(): IStringedNote | null {
@@ -295,7 +246,7 @@ export default class App extends Component<IAppProps, IAppState> {
 
     return {
       editorIsFocused: true,
-      chords: this.getEmptyChords(64, tuning.length),
+      chords: this.musicTheoryService.getEmptyChords(64, tuning.length),
       focusedNote: {
         chordIndex: 0,
         stringIndex: 0
@@ -345,14 +296,6 @@ export default class App extends Component<IAppProps, IAppState> {
       maxFretDistance: 4,
       suggestedChords: null
     };
-  }
-
-  private getEmptyChords(numChords: number, numStrings: number): null[][] {
-    return new Array(numChords).fill(this.getAllNulls(numStrings));
-  }
-
-  private getAllNulls = (size: number): null[] => {
-    return new Array(size).fill(null);
   }
 
   private tabLocationsAreEqual(one: ITabNoteLocation, two: ITabNoteLocation): boolean {

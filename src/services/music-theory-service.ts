@@ -21,8 +21,16 @@ export class MusicTheoryService implements IMusicTheoryService {
       .filter(fretIndexPair => fretIndexPair.fret !== null);
   }
 
+  getEmptyChords(numChords: number, numStrings: number): null[][] {
+    return new Array(numChords).fill(this.getAllNulls(numStrings));
+  }
+
   getNoteValueFromFret(tuningNote: INote, fret: number): number {
     return this.getNoteValue(this.getNoteFromFret(tuningNote, fret));
+  }
+
+  private getAllNulls(size: number): null[] {
+    return new Array(size).fill(null);
   }
 }
 
@@ -30,6 +38,7 @@ export interface IMusicTheoryService {
   getNoteValue(note: INote): number;
   getNoteFromFret(tuningNote: INote, fret: number): INote;
   getChordWithoutNulls(chord: (number | null)[]): IFretIndexPair[];
+  getEmptyChords(numChords: number, numStrings: number): null[][];
   getNoteValueFromFret(tuningNote: INote, fret: number): number;
 }
 

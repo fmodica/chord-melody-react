@@ -1,8 +1,10 @@
 import { ArrayUtilities } from "./array-utilities";
-import { IMusicTheoryService, INote, MusicTheoryService, NoteLetter } from "./music-theory-service";
+import { ChordPlayabilityService, IChordPlayabilityService } from "./chord-playability-service";
+import { IFretIndexPair, IMusicTheoryService, INote, MusicTheoryService, NoteLetter } from "./music-theory-service";
 
 export class ChordMelodyService implements IChordMelodyService {
   private readonly musicTheoryService: IMusicTheoryService = new MusicTheoryService();
+  private readonly chordPlayabilityService: IChordPlayabilityService = new ChordPlayabilityService();
 
   getChords(
     chordRoot: NoteLetter,
@@ -13,7 +15,8 @@ export class ChordMelodyService implements IChordMelodyService {
     maxFretDistance: number,
     minFret: number,
     maxFret: number,
-    excludeChordsWithOpenNotes: boolean
+    excludeChordsWithOpenNotes: boolean,
+    maxPlayability: number
   ): (number | null)[][] {
     this.validate(intervalOptionalPairs, tuning, numFrets, maxFretDistance);
 
@@ -39,6 +42,51 @@ export class ChordMelodyService implements IChordMelodyService {
     const filteredCombos: (number | null)[][] = allCombos.filter((chord: (number | null)[]) => {
       return this.isValidChord(chord, tuning, requiredNoteLetterSet, maxFretDistance);
     });
+
+    const suggestedPlayableChords = filteredCombos.filter(chord => this.chordPlayabilityService.getPlayability(chord) <= 4);
+
+    const mapFromLowestValueNoteToChords = new Map<number, (number | null)[][]>();
+
+    suggestedPlayableChords.forEach(chord => {
+      const chordWithoutNulls: IFretIndexPair[] = this.musicTheoryService.getChordWithoutNulls(chord);
+      const noteValues: number[] = chordWithoutNulls.map(fretIndexPair => this.musicTheoryService.getNoteValueFromFret(tuning[fretIndexPair.index], fretIndexPair.fret as number));
+
+      const { min: minValue } = ArrayUtilities.getMinMax(noteValues);
+
+      if (!mapFromLowestValueNoteToChords.has(minValue)) {
+        mapFromLowestValueNoteToChords.set(minValue, []);
+      }
+
+      mapFromLowestValueNoteToChords.get(minValue)?.push(chord);
+    });
+
+    mapFromLowestValueNoteToChords.forEach(chords => {
+      chords.sort((a, b) => {
+        const aWithoutNulls: IFretIndexPair[] = this.musicTheoryService.getChordWithoutNulls(a);
+        const bWithoutNulls: IFretIndexPair[] = this.musicTheoryService.getChordWithoutNulls(b);
+
+        // Sort by chord length
+        if (aWithoutNulls.length !== bWithoutNulls.length) {
+          return aWithoutNulls.length - bWithoutNulls.length;
+        }
+
+        // Same chord length, sort by sum of non-bass note values
+        const aNoteValues: number[] = aWithoutNulls.map(fretIndexPair => this.musicTheoryService.getNoteValueFromFret(tuning[fretIndexPair.index], fretIndexPair.fret as number));
+        const bNoteValues: number[] = bWithoutNulls.map(fretIndexPair => this.musicTheoryService.getNoteValueFromFret(tuning[fretIndexPair.index], fretIndexPair.fret as number));
+
+        const { min: aMinNoteValue } = ArrayUtilities.getMinMax(aNoteValues);
+        const { min: bMinNoteValue } = ArrayUtilities.getMinMax(bNoteValues);
+
+        const aSum = aNoteValues.filter(noteValue => noteValue !== aMinNoteValue).reduce((a, b) => a + b, 0);
+        const bSum = bNoteValues.filter(noteValue => noteValue !== bMinNoteValue).reduce((a, b) => a + b, 0);
+
+        return bSum - aSum;
+      });
+
+      chords.push(...this.musicTheoryService.getEmptyChords(1, 6));
+    });
+
+    return Array.from(mapFromLowestValueNoteToChords.values()).flat();
 
     return filteredCombos;
   }
@@ -228,6 +276,7 @@ export interface IChordMelodyService {
     maxFretDistance: number,
     minFret: number,
     maxFret: number,
-    excludeChordsWithOpenNotes: boolean
+    excludeChordsWithOpenNotes: boolean,
+    maxPlayability: number
   ): (number | null)[][];
 }

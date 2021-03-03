@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 
 import Button from '@material-ui/core/Button';
 
-import { Tablature, ITabNoteLocation, INote, NoteLetter } from './submodules/tablature-react/src/tablature/tablature';
+import { Tablature, ITabNoteLocation, INote, NoteLetter, IChord } from './submodules/tablature-react/src/tablature/tablature';
 import ChordMenu from './components/ChordMenu';
 import { IStringedNote, Interval, IIntervalOptionalPair, IChordMelodyService, ChordMelodyService } from './services/chord-melody-service';
 import { IMusicTheoryService, MusicTheoryService } from './services/music-theory-service';
@@ -11,6 +11,7 @@ import './App.css';
 
 export default class App extends Component<IAppProps, IAppState> {
   private readonly tabsKey: string = 'tabs';
+  private id: number = 0;
   private readonly chordMelodyService: IChordMelodyService = new ChordMelodyService();
   private readonly musicTheoryService: IMusicTheoryService = new MusicTheoryService();
 
@@ -36,6 +37,7 @@ export default class App extends Component<IAppProps, IAppState> {
             onEdit={this.onEdit}
             onNoteClick={this.onNoteClick}
             onEditorFocus={this.onEditorFocus}
+            getUniqueId={this.getUniqueId}
           ></Tablature>
 
           {this.getMenuEl()}
@@ -55,7 +57,7 @@ export default class App extends Component<IAppProps, IAppState> {
       return;
     }
 
-    const chords: (number | null)[][] = JSON.parse(savedChordsStr);
+    const chords: IChord[] = JSON.parse(savedChordsStr);
 
     this.onEdit(chords, this.state.focusedNote);
   }
@@ -69,13 +71,13 @@ export default class App extends Component<IAppProps, IAppState> {
     this.setState({ focusedNote: newFocusedNote });
   }
 
-  onEdit = (newChords: (number | null)[][], newFocusedNote: ITabNoteLocation): void => {
+  onEdit = (newChords: IChord[], newFocusedNote: ITabNoteLocation): void => {
     this.setState({ chords: newChords, focusedNote: newFocusedNote });
     window.localStorage.setItem(this.tabsKey, JSON.stringify(newChords));
   }
 
   onNoteClick = (clickedNote: ITabNoteLocation, e: React.MouseEvent): void => {
-    const fret: number | null = this.state.chords[clickedNote.chordIndex][clickedNote.stringIndex];
+    const fret: number | null = this.state.chords[clickedNote.chordIndex].frets[clickedNote.stringIndex];
 
     if (this.state.menuIsOpen) {
       this.closeMenu();
@@ -90,13 +92,21 @@ export default class App extends Component<IAppProps, IAppState> {
     this.setState({ editorIsFocused: isFocused });
   }
 
+  getUniqueId = (): string => {
+    return (this.id++).toString();
+  }
+
   onSuggestedChordNoteClick = (newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void => {
     if (this.state.suggestedChords === null) {
       return;
     }
 
-    const newChords: (number | null)[][] = [...this.state.chords];
-    const newChord: (number | null)[] = [...this.state.suggestedChords[newFocusedNote.chordIndex]];
+    const newChords: IChord[] = [...this.state.chords];
+
+    const newChord: IChord = {
+      id: this.getUniqueId(),
+      frets: [...this.state.suggestedChords[newFocusedNote.chordIndex].frets]
+    };
 
     newChords[this.state.focusedNote.chordIndex] = newChord;
 
@@ -188,7 +198,7 @@ export default class App extends Component<IAppProps, IAppState> {
     }, 200);
   }
 
-  private getSuggestedChords(): (number | null)[][] | null {
+  private getSuggestedChords(): IChord[] | null {
     const melodyStringedNote: IStringedNote | null = this.getFocusedNoteAsStringedNote();
 
     if (
@@ -213,12 +223,21 @@ export default class App extends Component<IAppProps, IAppState> {
       4
     );
 
-    return suggestedChords;
+    return suggestedChords.map(this.convertFretsToChord);
+  }
+
+  private convertFretsToChord = (frets: (number | null)[]): IChord => {
+    const chord: IChord = {
+      id: this.getUniqueId(),
+      frets: frets
+    }
+
+    return chord;
   }
 
   private getFocusedNoteAsStringedNote(): IStringedNote | null {
-    const focusedChord: (number | null)[] = this.state.chords[this.state.focusedNote.chordIndex];
-    const melodyFret: number | null = focusedChord[this.state.focusedNote.stringIndex];
+    const focusedChord: IChord = this.state.chords[this.state.focusedNote.chordIndex];
+    const melodyFret: number | null = focusedChord.frets[this.state.focusedNote.stringIndex];
 
     if (melodyFret === null) {
       return null;
@@ -246,7 +265,9 @@ export default class App extends Component<IAppProps, IAppState> {
 
     return {
       editorIsFocused: true,
-      chords: this.musicTheoryService.getEmptyChords(64, tuning.length),
+      chords: this.musicTheoryService
+        .getEmptyChords(64, tuning.length)
+        .map(this.convertFretsToChord),
       focusedNote: {
         chordIndex: 0,
         stringIndex: 0
@@ -325,7 +346,8 @@ export default class App extends Component<IAppProps, IAppState> {
       onExcludeChordsWithOpenNotesChecked={this.onExcludeChordsWithOpenNotesChecked}
       onGetChordsClick={this.onGetChordsClick}
       onSuggestedChordNoteClick={this.onSuggestedChordNoteClick}
-      onCloseMenu={this.closeMenu} />
+      onCloseMenu={this.closeMenu}
+      getUniqueId={this.getUniqueId} />
   }
 }
 
@@ -333,7 +355,7 @@ interface IAppProps { }
 
 interface IAppState {
   editorIsFocused: boolean;
-  chords: (number | null)[][];
+  chords: IChord[];
   focusedNote: ITabNoteLocation;
   tuning: INote[];
   maxTabFret: number;
@@ -350,5 +372,5 @@ interface IAppState {
   maxFretDistance: number;
   // If null, we are not currently suggesting chords.
   // If empty, we are suggesting chords but there are none.
-  suggestedChords: (number | null)[][] | null;
+  suggestedChords: IChord[] | null;
 }

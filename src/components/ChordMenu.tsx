@@ -3,7 +3,7 @@ import Draggable from 'react-draggable';
 import { AppBar, Box, Button, Checkbox, Dialog, DialogContent, DialogTitle, FormControl, FormControlLabel, FormHelperText, MenuItem, Paper, Select, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Typography } from '@material-ui/core';
 
 import { IIntervalOptionalPair, Interval } from '../services/chord-melody-service';
-import { INote, ITabNoteLocation, NoteLetter, Tablature } from '../submodules/tablature-react/src/tablature/tablature';
+import { IChord, INote, ITabNoteLocation, NoteLetter, Tablature } from '../submodules/tablature-react/src/tablature/tablature';
 
 const ChordMenu: React.FC<IChordMenuProps> = (props: IChordMenuProps) => {
   let { content, title } = props.suggestedChords ?
@@ -29,7 +29,7 @@ const ChordMenu: React.FC<IChordMenuProps> = (props: IChordMenuProps) => {
 
 function PaperComponent(props: any) {
   return (
-    <Draggable handle="#draggable-dialog-title" cancel={'[class*="MuiDialogContent-root"]'}> 
+    <Draggable handle="#draggable-dialog-title" cancel={'[class*="MuiDialogContent-root"]'}>
       <Paper {...props} />
     </Draggable>
   );
@@ -55,6 +55,7 @@ function getSuggestedChordsDisplay(props: IChordMenuProps): { content: JSX.Eleme
           onEdit={() => { }}
           onNoteClick={props.onSuggestedChordNoteClick}
           onEditorFocus={() => { }}
+          getUniqueId={props.getUniqueId}
         ></Tablature>
       </div>,
     title: <>Pick a chord</>
@@ -206,7 +207,7 @@ interface IChordMenuProps {
   selectedChordRoot: NoteLetter | null;
   excludeChordsWithOpenNotes: boolean;
   selectedIntervalOptionalPairs: IIntervalOptionalPair[];
-  suggestedChords: (number | null)[][] | null;
+  suggestedChords: IChord[] | null;
   onTabSelected(event: React.ChangeEvent<{}>, newValue: number): void;
   onChordRootSelected(event: React.ChangeEvent<{ value: unknown }>): void;
   onIntervalChecked(interval: Interval, indexOfSelectedInterval: number): void;
@@ -217,6 +218,7 @@ interface IChordMenuProps {
   onGetChordsClick(): void;
   onSuggestedChordNoteClick(newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void;
   onCloseMenu(): void;
+  getUniqueId(): string;
 }
 
 interface TabPanelProps {

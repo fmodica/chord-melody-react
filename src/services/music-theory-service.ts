@@ -22,15 +22,27 @@ export class MusicTheoryService implements IMusicTheoryService {
   }
 
   getEmptyChords(numChords: number, numStrings: number): null[][] {
-    return new Array(numChords).fill(this.getAllNulls(numStrings));
+    const chords: null[][] = [];
+
+    for (let i = 0; i < numChords; i++) {
+      chords.push(this.getNullChord(numStrings));
+    }
+
+    return chords;
   }
 
   getNoteValueFromFret(tuningNote: INote, fret: number): number {
     return this.getNoteValue(this.getNoteFromFret(tuningNote, fret));
   }
 
-  private getAllNulls(size: number): null[] {
-    return new Array(size).fill(null);
+  private getNullChord(numFrets: number): null[] {
+    const chord: null[] = [];
+
+    for (let i = 0; i < numFrets; i++) {
+      chord.push(null);
+    }
+
+    return chord;
   }
 }
 

@@ -83,7 +83,7 @@ export class ChordMelodyService implements IChordMelodyService {
         return bSum - aSum;
       });
 
-      chords.push(...this.musicTheoryService.getEmptyChords(1, 6));
+      chords.push(...this.musicTheoryService.getEmptyChords(1, tuning.length));
     });
 
     return Array.from(mapFromLowestValueNoteToChords.values()).flat();

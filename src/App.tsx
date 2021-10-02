@@ -11,7 +11,7 @@ import './App.css';
 import { ArrayUtilities } from './services/array-utilities';
 
 export default class App extends Component<IAppProps, IAppState> {
-  private readonly tabsKey: string = 'tabs';
+  private readonly appStateKey: string = 'app-state';
   private id: number = 0;
   private readonly chordMelodyService: IChordMelodyService = new ChordMelodyService();
   private readonly musicTheoryService: IMusicTheoryService = new MusicTheoryService();
@@ -52,18 +52,27 @@ export default class App extends Component<IAppProps, IAppState> {
   }
 
   componentDidMount(): void {
-    const savedChordsStr = window.localStorage.getItem(this.tabsKey);
+    setInterval(() => {
+      const stateToSave: any = { ...this.state };
+      delete stateToSave.mapFromIntervalEnumToString;
+      delete stateToSave.mapFromNoteLetterEnumToString;
 
-    if (!savedChordsStr) {
+      window.localStorage.setItem(this.appStateKey, JSON.stringify(stateToSave));
+    }, 5000);
+
+    const savedStateStr: string | null = window.localStorage.getItem(this.appStateKey);
+
+    if (!savedStateStr) {
       return;
     }
 
-    const chords: IChord[] = JSON.parse(savedChordsStr);
+    const savedState: IAppState = JSON.parse(savedStateStr);
 
-    let { max } = ArrayUtilities.getMinMax(chords.map(c => parseInt(c.id)));
+    // The saved state only is a subset of the IAppState properties, so not all will get overwritten (e.g. maps)
+    this.setState({ ...savedState });
+
+    let { max } = ArrayUtilities.getMinMax(savedState.chords.map(c => parseInt(c.id)));
     this.id = ++max;
-
-    this.onEdit(chords, this.state.focusedNote);
   }
 
   onKeyBoardNavigation = (newFocusedNote: ITabNoteLocation, e: KeyboardEvent): void => {
@@ -77,7 +86,6 @@ export default class App extends Component<IAppProps, IAppState> {
 
   onEdit = (newChords: IChord[], newFocusedNote: ITabNoteLocation): void => {
     this.setState({ chords: newChords, focusedNote: newFocusedNote });
-    window.localStorage.setItem(this.tabsKey, JSON.stringify(newChords));
   }
 
   onNoteClick = (clickedNote: ITabNoteLocation, e: React.MouseEvent): void => {
@@ -118,7 +126,7 @@ export default class App extends Component<IAppProps, IAppState> {
   }
 
   onReset = (): void => {
-    window.localStorage.removeItem(this.tabsKey);
+    window.localStorage.removeItem(this.appStateKey);
     this.setState(this.getInitialState());
   }
 

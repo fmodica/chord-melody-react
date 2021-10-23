@@ -1,6 +1,6 @@
 import { ArrayUtilities } from "./array-utilities";
 import { ChordPlayabilityService, IChordPlayabilityService } from "./chord-playability-service";
-import { IFretIndexPair, IMusicTheoryService, INote, MusicTheoryService, NoteLetter } from "./music-theory-service";
+import { IFretIndexPair, IIntervalOptionalPair, IMusicTheoryService, INote, INoteLetterOptionalPair, Interval, IStringedNote, MusicTheoryService, NoteLetter } from "./music-theory-service";
 
 export class ChordMelodyService implements IChordMelodyService {
   private readonly musicTheoryService: IMusicTheoryService = new MusicTheoryService();
@@ -10,7 +10,6 @@ export class ChordMelodyService implements IChordMelodyService {
     chordRoot: NoteLetter,
     intervalOptionalPairs: IIntervalOptionalPair[],
     tuning: INote[],
-    numFrets: number,
     melodyStringedNote: IStringedNote,
     maxFretDistance: number,
     minFret: number,
@@ -18,9 +17,9 @@ export class ChordMelodyService implements IChordMelodyService {
     excludeChordsWithOpenNotes: boolean,
     maxPlayability: number
   ): (number | null)[][] {
-    this.validate(intervalOptionalPairs, tuning, numFrets, maxFretDistance);
+    this.validate(intervalOptionalPairs, tuning, maxFretDistance);
 
-    const noteLetterOptionalPairs: INoteLetterOptionalPair[] = this.getNoteLetterOptionalPairs(chordRoot, intervalOptionalPairs);
+    const noteLetterOptionalPairs: INoteLetterOptionalPair[] = this.musicTheoryService.getNoteLetterOptionalPairs(chordRoot, intervalOptionalPairs);
 
     const fretsOfNotesOnAllStrings: (number | null)[][] = this.getsFretsOfNotesOnAllStrings(
       noteLetterOptionalPairs.map((pair: INoteLetterOptionalPair) => pair.noteLetter),
@@ -87,19 +86,6 @@ export class ChordMelodyService implements IChordMelodyService {
     });
 
     return Array.from(mapFromLowestValueNoteToChords.values()).flat();
-
-    return filteredCombos;
-  }
-
-  private getNoteLetterOptionalPairs(chordRoot: NoteLetter, intervalOptionalPairs: IIntervalOptionalPair[]): INoteLetterOptionalPair[] {
-    return intervalOptionalPairs.map((intervalOptionalPair: IIntervalOptionalPair) => {
-      const noteLetter: NoteLetter = this.getNoteLetterFromRootAndInterval(chordRoot, intervalOptionalPair.interval);
-
-      return {
-        noteLetter: noteLetter,
-        isOptional: intervalOptionalPair.isOptional
-      };
-    });
   }
 
   private getsFretsOfNotesOnAllStrings(
@@ -198,7 +184,7 @@ export class ChordMelodyService implements IChordMelodyService {
         continue;
       }
 
-      let note = this.musicTheoryService.getNoteFromFret(tuning[stringIndex], i);
+      const note: INote = this.musicTheoryService.getNoteFromFret(tuning[stringIndex], i);
 
       if (requiredNotesSet.has(note.letter) && this.musicTheoryService.getNoteValue(note) <= melodyNoteValue) {
         fretsOfRequiredNotesOnString.push(i);
@@ -208,7 +194,7 @@ export class ChordMelodyService implements IChordMelodyService {
     return fretsOfRequiredNotesOnString;
   }
 
-  private validate(intervalOptionalPairs: IIntervalOptionalPair[], tuning: INote[], numFrets: number, maxFretDistance: number): void {
+  private validate(intervalOptionalPairs: IIntervalOptionalPair[], tuning: INote[], maxFretDistance: number): void {
     // Check for uniqueness
     if (intervalOptionalPairs.length === 0) {
       throw new Error(`The interval-optional pairs array has no elements.`);
@@ -218,52 +204,10 @@ export class ChordMelodyService implements IChordMelodyService {
       throw new Error(`The tuning array has no elements.`);
     }
 
-    if (numFrets <= 0) {
-      throw new Error(`The number of frets must be greater than zero, but it is ${numFrets}.`);
-    }
-
     if (maxFretDistance <= 0) {
       throw new Error(`The max fret distance must be greater than zero, but it is ${maxFretDistance}.`);
     }
   }
-
-  private getNoteLetterFromRootAndInterval(root: NoteLetter, interval: Interval): NoteLetter {
-    let note: number = root + interval;
-
-    return note > 11
-      ? (note - 12)
-      : note
-  }
-}
-
-export interface IStringedNote {
-  stringIndex: number;
-  fret: number;
-}
-
-export enum Interval {
-  Root,
-  FlatSecond,
-  Second,
-  FlatThird,
-  Third,
-  Fourth,
-  FlatFifth,
-  Fifth,
-  FlatSixth,
-  Sixth,
-  FlatSeventh,
-  Seventh
-}
-
-export interface IIntervalOptionalPair {
-  interval: Interval;
-  isOptional: boolean;
-}
-
-interface INoteLetterOptionalPair {
-  noteLetter: NoteLetter;
-  isOptional: boolean;
 }
 
 export interface IChordMelodyService {
@@ -271,7 +215,6 @@ export interface IChordMelodyService {
     chordRoot: NoteLetter,
     intervalOptionalPairs: IIntervalOptionalPair[],
     tuning: INote[],
-    numFrets: number,
     melodyNote: IStringedNote,
     maxFretDistance: number,
     minFret: number,

@@ -21,8 +21,8 @@ export class MusicTheoryService implements IMusicTheoryService {
       .filter(fretIndexPair => fretIndexPair.fret !== null);
   }
 
-  getEmptyChords(numChords: number, numStrings: number): null[][] {
-    const chords: null[][] = [];
+  getEmptyChords(numChords: number, numStrings: number): (number | null)[][] {
+    const chords: (number | null)[][] = [];
 
     for (let i = 0; i < numChords; i++) {
       chords.push(this.getNullChord(numStrings));
@@ -35,7 +35,7 @@ export class MusicTheoryService implements IMusicTheoryService {
     return this.getNoteValue(this.getNoteFromFret(tuningNote, fret));
   }
 
-  private getNullChord(numFrets: number): null[] {
+  getNullChord(numFrets: number): (number | null)[] {
     const chord: null[] = [];
 
     for (let i = 0; i < numFrets; i++) {
@@ -44,14 +44,36 @@ export class MusicTheoryService implements IMusicTheoryService {
 
     return chord;
   }
+
+  getNoteLetterOptionalPairs(chordRoot: NoteLetter, intervalOptionalPairs: IIntervalOptionalPair[]): INoteLetterOptionalPair[] {
+    return intervalOptionalPairs.map((intervalOptionalPair: IIntervalOptionalPair) => {
+      const noteLetter: NoteLetter = this.getNoteLetterFromRootAndInterval(chordRoot, intervalOptionalPair.interval);
+
+      return {
+        noteLetter: noteLetter,
+        isOptional: intervalOptionalPair.isOptional
+      };
+    });
+  }
+
+  getNoteLetterFromRootAndInterval(root: NoteLetter, interval: Interval): NoteLetter {
+    let note: number = root + interval;
+
+    return note > 11
+      ? (note - 12)
+      : note
+  }
 }
 
 export interface IMusicTheoryService {
   getNoteValue(note: INote): number;
   getNoteFromFret(tuningNote: INote, fret: number): INote;
   getChordWithoutNulls(chord: (number | null)[]): IFretIndexPair[];
-  getEmptyChords(numChords: number, numStrings: number): null[][];
+  getEmptyChords(numChords: number, numStrings: number): (number | null)[][];
   getNoteValueFromFret(tuningNote: INote, fret: number): number;
+  getNullChord(numFrets: number): (number | null)[];
+  getNoteLetterOptionalPairs(chordRoot: NoteLetter, intervalOptionalPairs: IIntervalOptionalPair[]): INoteLetterOptionalPair[];
+  getNoteLetterFromRootAndInterval(root: NoteLetter, interval: Interval): NoteLetter;
 }
 
 export enum NoteLetter {
@@ -77,4 +99,34 @@ export interface INote {
 export interface IFretIndexPair {
   fret: number | null;
   index: number;
+}
+
+export enum Interval {
+  Root,
+  FlatSecond,
+  Second,
+  FlatThird,
+  Third,
+  Fourth,
+  FlatFifth,
+  Fifth,
+  FlatSixth,
+  Sixth,
+  FlatSeventh,
+  Seventh
+}
+
+export interface IIntervalOptionalPair {
+  interval: Interval;
+  isOptional: boolean;
+}
+
+export interface INoteLetterOptionalPair {
+  noteLetter: NoteLetter;
+  isOptional: boolean;
+}
+
+export interface IStringedNote {
+  stringIndex: number;
+  fret: number;
 }

@@ -1,20 +1,19 @@
 import React, { Component } from 'react';
-
 import Button from '@material-ui/core/Button';
-
 import { Tablature, ITabNoteLocation, INote, NoteLetter, IChord } from './submodules/tablature-react/src/tablature/tablature';
 import ChordMenu from './components/ChordMenu';
-import { IStringedNote, Interval, IIntervalOptionalPair, IChordMelodyService, ChordMelodyService } from './services/chord-melody-service';
-import { IMusicTheoryService, MusicTheoryService } from './services/music-theory-service';
-
-import './App.css';
+import { IChordMelodyService, ChordMelodyService } from './services/chord-melody-service';
+import { IIntervalOptionalPair, IMusicTheoryService, Interval, IStringedNote, MusicTheoryService } from './services/music-theory-service';
+import { IMelodyGeneratorService, MelodyGeneratorService } from './services/melody-generator-service';
 import { ArrayUtilities } from './services/array-utilities';
+import './App.css';
 
 export default class App extends Component<IAppProps, IAppState> {
   private readonly appStateKey: string = 'app-state';
   private id: number = 0;
   private readonly chordMelodyService: IChordMelodyService = new ChordMelodyService();
   private readonly musicTheoryService: IMusicTheoryService = new MusicTheoryService();
+  private readonly melodyGeneratorService: IMelodyGeneratorService = new MelodyGeneratorService();
 
   constructor(props: IAppProps) {
     super(props);
@@ -45,7 +44,7 @@ export default class App extends Component<IAppProps, IAppState> {
         </div>
 
         <div className='bottom-menu'>
-          <Button className='reset-btn' variant='contained' color='secondary' onClick={this.onReset}>Start Over</Button>
+          <Button className='reset-btn' variant='contained' color='secondary' onClick={this.onResetBtnClick}>Start Over</Button>
         </div>
       </div>
     );
@@ -125,9 +124,34 @@ export default class App extends Component<IAppProps, IAppState> {
     this.onEdit(newChords, this.state.focusedNote);
   }
 
-  onReset = (): void => {
+  onResetBtnClick = (): void => {
     window.localStorage.removeItem(this.appStateKey);
     this.setState(this.getInitialState());
+  }
+
+  onGetMelodyClick = (): void => {
+    // Duplicate code in getSuggestedChords
+    const melodyStringedNote: IStringedNote | null = this.getFocusedNoteAsStringedNote();
+
+    if (
+      this.state.selectedChordRoot === null ||
+      this.state.selectedIntervalOptionalPairs === null ||
+      this.state.selectedIntervalOptionalPairs.length === 0 ||
+      melodyStringedNote === null
+    ) {
+      return;
+    }
+
+    const melody: (number | null)[][] = this.melodyGeneratorService.getMelody(
+      this.state.selectedChordRoot,
+      this.state.selectedIntervalOptionalPairs,
+      this.state.tuning,
+      melodyStringedNote,
+      this.state.minFret,
+      this.state.maxFret
+    );
+
+    this.setState({ chords: melody.map(this.convertFretsToChord) });
   }
 
   onTabSelected = (event: React.ChangeEvent<{}>, newValue: number): void => {
@@ -226,7 +250,6 @@ export default class App extends Component<IAppProps, IAppState> {
       this.state.selectedChordRoot,
       this.state.selectedIntervalOptionalPairs,
       this.state.tuning,
-      this.state.maxTabFret,
       melodyStringedNote,
       this.state.maxFretDistance,
       this.state.minFret,
@@ -357,6 +380,7 @@ export default class App extends Component<IAppProps, IAppState> {
       onMaxFretChanged={this.onMaxFretChanged}
       onExcludeChordsWithOpenNotesChecked={this.onExcludeChordsWithOpenNotesChecked}
       onGetChordsClick={this.onGetChordsClick}
+      onGetMelodyClick={this.onGetMelodyClick}
       onSuggestedChordNoteClick={this.onSuggestedChordNoteClick}
       onCloseMenu={this.closeMenu}
       getUniqueId={this.getUniqueId} />

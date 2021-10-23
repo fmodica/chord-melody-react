@@ -1,9 +1,8 @@
 import React from 'react';
 import Draggable from 'react-draggable';
 import { AppBar, Box, Button, Checkbox, Dialog, DialogContent, DialogTitle, FormControl, FormControlLabel, FormHelperText, MenuItem, Paper, Select, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Typography } from '@material-ui/core';
-
-import { IIntervalOptionalPair, Interval } from '../services/chord-melody-service';
 import { IChord, INote, ITabNoteLocation, NoteLetter, Tablature } from '../submodules/tablature-react/src/tablature/tablature';
+import { IIntervalOptionalPair, Interval } from '../services/music-theory-service';
 
 const ChordMenu: React.FC<IChordMenuProps> = (props: IChordMenuProps) => {
   let { content, title } = props.suggestedChords ?
@@ -76,7 +75,8 @@ function getChordMelodyOptionsMenu(props: IChordMenuProps): { content: JSX.Eleme
               null :
               <>
                 {getChordMelodyIntervalsTable(props)}
-                {getSubmitButton(props)}
+                {getChordBtn(props)}
+                {getMelodyBtn(props)}
               </>
           }
         </div>
@@ -129,10 +129,10 @@ function getChordMelodyIntervalsTable(props: IChordMenuProps): JSX.Element {
             <TableRow>
               <TableCell padding='none'>
                 Interval
-                </TableCell>
+              </TableCell>
               <TableCell padding='none'>
                 Optional?
-                </TableCell>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -191,8 +191,12 @@ function getChordMelodySelectMenu(props: IChordMenuProps): JSX.Element {
   );
 }
 
-function getSubmitButton(props: IChordMenuProps): JSX.Element {
+function getChordBtn(props: IChordMenuProps): JSX.Element {
   return <Button variant='contained' color='primary' disabled={props.selectedIntervalOptionalPairs.length === 0} onClick={props.onGetChordsClick}>Get Chords</Button>;
+}
+
+function getMelodyBtn(props: IChordMenuProps): JSX.Element {
+  return <Button className='get-melody-btn' variant='contained' color='primary' onClick={props.onGetMelodyClick}>Get Melody</Button>
 }
 
 interface IChordMenuProps {
@@ -216,6 +220,7 @@ interface IChordMenuProps {
   onMinFretChanged(event: React.ChangeEvent<HTMLInputElement>): void;
   onMaxFretChanged(event: React.ChangeEvent<HTMLInputElement>): void;
   onGetChordsClick(): void;
+  onGetMelodyClick(): void;
   onSuggestedChordNoteClick(newFocusedNote: ITabNoteLocation, e: React.MouseEvent): void;
   onCloseMenu(): void;
   getUniqueId(): string;

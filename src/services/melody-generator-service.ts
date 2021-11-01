@@ -41,7 +41,7 @@ export class MelodyGeneratorService implements IMelodyGeneratorService {
     for (let i = 0; i < 31; i++) {
       // http://nodegame.github.io/JSUS/docs/lib/random.js.html
       // Use .5 for an average of 2
-      const distancePositive: number = Math.round(this.nextExponential(.5));
+      const distancePositive: number = Math.round(this.nextExponential(1));
       const sign: number = this.getRandomIntInclusive(0, 1);
       const distance: number = distancePositive * (sign === 1 ? 1 : -1);
 

@@ -7,6 +7,7 @@ import { IIntervalOptionalPair, IMusicTheoryService, Interval, IStringedNote, Mu
 import { IMelodyGeneratorService, MelodyGeneratorService } from './services/melody-generator-service';
 import { ArrayUtilities } from './services/array-utilities';
 import './App.css';
+import { IMidiService, MidiService } from './services/midi-service';
 
 export default class App extends Component<IAppProps, IAppState> {
   private readonly appStateKey: string = 'app-state';
@@ -14,6 +15,7 @@ export default class App extends Component<IAppProps, IAppState> {
   private readonly chordMelodyService: IChordMelodyService = new ChordMelodyService();
   private readonly musicTheoryService: IMusicTheoryService = new MusicTheoryService();
   private readonly melodyGeneratorService: IMelodyGeneratorService = new MelodyGeneratorService();
+  private readonly midiService: IMidiService = new MidiService();
 
   constructor(props: IAppProps) {
     super(props);
@@ -76,15 +78,15 @@ export default class App extends Component<IAppProps, IAppState> {
 
   onKeyBoardNavigation = (newFocusedNote: ITabNoteLocation, e: KeyboardEvent): void => {
     e.preventDefault();
-    this.setState({ focusedNote: newFocusedNote })
-  }
-
-  onFocusedNoteChange = (newFocusedNote: ITabNoteLocation): void => {
     this.setState({ focusedNote: newFocusedNote });
   }
 
+  onFocusedNoteChange = (newFocusedNote: ITabNoteLocation): void => {
+    this.setState({ focusedNote: newFocusedNote }, () => this.playNotes());
+  }
+
   onEdit = (newChords: IChord[], newFocusedNote: ITabNoteLocation): void => {
-    this.setState({ chords: newChords, focusedNote: newFocusedNote });
+    this.setState({ chords: newChords, focusedNote: newFocusedNote }, () => this.playNotes());
   }
 
   onNoteClick = (clickedNote: ITabNoteLocation, e: React.MouseEvent): void => {
@@ -96,7 +98,7 @@ export default class App extends Component<IAppProps, IAppState> {
       this.setState({ menuIsOpen: true });
     }
 
-    this.setState({ focusedNote: clickedNote });
+    this.setState({ focusedNote: clickedNote }, () => this.playNotes());
   }
 
   onEditorFocus = (isFocused: boolean, e: React.FocusEvent): void => {
@@ -284,6 +286,16 @@ export default class App extends Component<IAppProps, IAppState> {
     };
 
     return melodyNote;
+  }
+
+  private playNotes(): void {
+    const notes: (INote | null)[] = this.state.chords[this.state.focusedNote.chordIndex].frets.map((fret: number | null, index: number) => {
+      return fret !== null
+        ? this.musicTheoryService.getNoteFromFret(this.state.tuning[index], fret)
+        : null;
+    }).filter(note => note !== null);
+
+    this.midiService.playNotes(notes as INote[]);
   }
 
   private getInitialState(): IAppState {

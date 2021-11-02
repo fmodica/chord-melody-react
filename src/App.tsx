@@ -47,6 +47,7 @@ export default class App extends Component<IAppProps, IAppState> {
 
         <div className='bottom-menu'>
           <Button className='reset-btn' variant='contained' color='secondary' onClick={this.onResetBtnClick}>Start Over</Button>
+          <Button className='play-notes-btn' variant='contained' color='primary' onClick={this.onPlayNotesClick}>Play</Button>
         </div>
       </div>
     );
@@ -82,11 +83,11 @@ export default class App extends Component<IAppProps, IAppState> {
   }
 
   onFocusedNoteChange = (newFocusedNote: ITabNoteLocation): void => {
-    this.setState({ focusedNote: newFocusedNote }, () => this.playNotes());
+    this.setState({ focusedNote: newFocusedNote }, () => this.playChord(this.state.focusedNote.chordIndex));
   }
 
   onEdit = (newChords: IChord[], newFocusedNote: ITabNoteLocation): void => {
-    this.setState({ chords: newChords, focusedNote: newFocusedNote }, () => this.playNotes());
+    this.setState({ chords: newChords, focusedNote: newFocusedNote }, () => this.playChord(this.state.focusedNote.chordIndex));
   }
 
   onNoteClick = (clickedNote: ITabNoteLocation, e: React.MouseEvent): void => {
@@ -98,7 +99,7 @@ export default class App extends Component<IAppProps, IAppState> {
       this.setState({ menuIsOpen: true });
     }
 
-    this.setState({ focusedNote: clickedNote }, () => this.playNotes());
+    this.setState({ focusedNote: clickedNote });
   }
 
   onEditorFocus = (isFocused: boolean, e: React.FocusEvent): void => {
@@ -288,8 +289,16 @@ export default class App extends Component<IAppProps, IAppState> {
     return melodyNote;
   }
 
-  private playNotes(): void {
-    const notes: (INote | null)[] = this.state.chords[this.state.focusedNote.chordIndex].frets.map((fret: number | null, index: number) => {
+  private onPlayNotesClick = (): void => {
+    for (let i = 0; i < this.state.chords.length; i++) {
+      setTimeout(() => {
+        this.playChord(i);
+      }, i * 250);
+    }
+  }
+
+  private playChord(chordIndex: number) {
+    const notes: (INote | null)[] = this.state.chords[chordIndex].frets.map((fret: number | null, index: number) => {
       return fret !== null
         ? this.musicTheoryService.getNoteFromFret(this.state.tuning[index], fret)
         : null;

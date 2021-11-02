@@ -45,9 +45,9 @@ export class MidiService implements IMidiService {
     let velocity = 96; // how hard the note hits
     this.MIDI.setVolume(0, velocity);
 
-    for (let i = 0; i < this.lastNotesPlayed.length; i++) {
-      this.MIDI.noteOff(0, this.lastNotesPlayed[i], 0);
-    }
+    // for (let i = 0; i < this.lastNotesPlayed.length; i++) {
+    //   this.MIDI.noteOff(0, this.lastNotesPlayed[i], 0);
+    // }
 
     let delay = 0;
     this.lastNotesPlayed = [];

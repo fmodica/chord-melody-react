@@ -38,10 +38,10 @@ export class MelodyGeneratorService implements IMelodyGeneratorService {
     let lastNote: INote = this.musicTheoryService.getNoteFromFret(tuning[melodyNote.stringIndex], melodyNote.fret);
     let lastFret: number = melodyNote.fret;
 
-    for (let i = 0; i < 31; i++) {
+    for (let i = 0; i < 16; i++) {
       // http://nodegame.github.io/JSUS/docs/lib/random.js.html
       // Use .5 for an average of 2
-      const distancePositive: number = Math.round(this.nextExponential(1));
+      const distancePositive: number = Math.round(this.nextExponential(.5));
       const sign: number = this.getRandomIntInclusive(0, 1);
       const distance: number = distancePositive * (sign === 1 ? 1 : -1);
 
@@ -63,7 +63,10 @@ export class MelodyGeneratorService implements IMelodyGeneratorService {
 
       const newMelodyChord: (number | null)[] = this.musicTheoryService.getNullChord(tuning.length);
 
-
+      if (this.musicTheoryService.getNoteValue(newNote) === this.musicTheoryService.getNoteValue(lastNote)) {
+        melodyChords.push(newMelodyChord);
+        continue;
+      }
 
       const fretsOfNotesOnAllStringsCopy = [...fretsOfNotesOnAllStrings];
       let found: boolean = false;

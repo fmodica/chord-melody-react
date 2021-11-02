@@ -154,7 +154,11 @@ export default class App extends Component<IAppProps, IAppState> {
       this.state.maxFret
     );
 
-    this.setState({ chords: melody.map(this.convertFretsToChord) });
+    const newChords: IChord[] = [...this.state.chords];
+
+    newChords.splice(this.state.focusedNote.chordIndex, melody.length, ...melody.map(this.convertFretsToChord));
+
+    this.setState({ chords: newChords });
   }
 
   onTabSelected = (event: React.ChangeEvent<{}>, newValue: number): void => {
@@ -290,6 +294,8 @@ export default class App extends Component<IAppProps, IAppState> {
   }
 
   private onPlayNotesClick = (): void => {
+    this.midiService.stopNotes();
+
     for (let i = 0; i < this.state.chords.length; i++) {
       setTimeout(() => {
         this.playChord(i);

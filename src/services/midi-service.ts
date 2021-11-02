@@ -34,6 +34,12 @@ export class MidiService implements IMidiService {
     this.playNoteValues(noteIntegers, 0.04);
   }
 
+  stopNotes(): void {
+    for (let i = 0; i < this.lastNotesPlayed.length; i++) {
+      this.MIDI.noteOff(0, this.lastNotesPlayed[i], 0);
+    }
+  }
+
   private playNoteValues(notes: number[], delayBetweenNotes: number): void {
     if (!(this.ready && notes && notes.length)) {
       return;
@@ -67,4 +73,5 @@ export class MidiService implements IMidiService {
 
 export interface IMidiService {
   playNotes(notes: INote[]): void;
+  stopNotes(): void;
 }

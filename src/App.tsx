@@ -48,7 +48,7 @@ export default class App extends Component<IAppProps, IAppState> {
         <div className='bottom-menu'>
           <Button className='reset-btn' variant='contained' color='secondary' onClick={this.onResetBtnClick}>Start Over</Button>
           {!this.state.isPlaying && <Button className='play-notes-btn' variant='contained' color='primary' onClick={this.onPlayNotesClick}>Play</Button>}
-          {this.state.isPlaying && <Button className='play-notes-btn' variant='contained' color='primary' onClick={this.onStopPlayingNotesClick}>Stop</Button>}
+          {this.state.isPlaying && <Button className='play-notes-btn' variant='contained' color='primary' onClick={() => this.onStopPlayingNotesClick()}>Stop</Button>}
         </div>
       </div>
     );
@@ -101,7 +101,11 @@ export default class App extends Component<IAppProps, IAppState> {
       this.setState({ menuIsOpen: true });
     }
 
-    this.setState({ focusedNote: clickedNote });
+    this.setState({ focusedNote: clickedNote }, () => {
+      if (this.state.isPlaying) {
+        this.onStopPlayingNotesClick(this.onPlayNotesClick);
+      }
+    });
   }
 
   onEditorFocus = (isFocused: boolean, e: React.FocusEvent): void => {
@@ -273,7 +277,7 @@ export default class App extends Component<IAppProps, IAppState> {
     }
   }
 
-  onStopPlayingNotesClick = (): void => {
+  onStopPlayingNotesClick = (callback?: () => void): void => {
     if (!this.state.isPlaying) {
       return;
     }
@@ -281,7 +285,7 @@ export default class App extends Component<IAppProps, IAppState> {
     this.midiService.stopNotes();
     this.timeouts.forEach(t => clearTimeout(t));
     this.timeouts = [];
-    this.setState({ isPlaying: false });
+    this.setState({ isPlaying: false }, callback);
   }
 
   private getSuggestedChords(): IChord[] | null {

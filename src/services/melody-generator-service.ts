@@ -38,7 +38,7 @@ export class MelodyGeneratorService implements IMelodyGeneratorService {
     let lastNote: INote = this.musicTheoryService.getNoteFromFret(tuning[melodyNote.stringIndex], melodyNote.fret);
     let lastFret: number = melodyNote.fret;
 
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 15; i++) {
       // http://nodegame.github.io/JSUS/docs/lib/random.js.html
       // Use .5 for an average of 2
       const distancePositive: number = Math.round(this.nextExponential(.5));

@@ -14,6 +14,11 @@
   margin-right: 20px;
 }
 
+.bottom-menu .play-notes-btn {
+  float: left;
+  margin-left: 20px;
+}
+
 .MuiButtonBase-root.get-melody-btn {
   margin-top: 5px;
 }

@@ -12,6 +12,7 @@ import { IMidiService, MidiService } from './services/midi-service';
 export default class App extends Component<IAppProps, IAppState> {
   private readonly appStateKey: string = 'app-state';
   private id: number = 0;
+  private timeouts: NodeJS.Timeout[] = [];
   private readonly chordMelodyService: IChordMelodyService = new ChordMelodyService();
   private readonly musicTheoryService: IMusicTheoryService = new MusicTheoryService();
   private readonly melodyGeneratorService: IMelodyGeneratorService = new MelodyGeneratorService();
@@ -19,7 +20,6 @@ export default class App extends Component<IAppProps, IAppState> {
 
   constructor(props: IAppProps) {
     super(props);
-
     this.state = this.getInitialState();
   }
 
@@ -47,7 +47,8 @@ export default class App extends Component<IAppProps, IAppState> {
 
         <div className='bottom-menu'>
           <Button className='reset-btn' variant='contained' color='secondary' onClick={this.onResetBtnClick}>Start Over</Button>
-          <Button className='play-notes-btn' variant='contained' color='primary' onClick={this.onPlayNotesClick}>Play</Button>
+          {!this.state.isPlaying && <Button className='play-notes-btn' variant='contained' color='primary' onClick={this.onPlayNotesClick}>Play</Button>}
+          {this.state.isPlaying && <Button className='play-notes-btn' variant='contained' color='primary' onClick={this.onStopPlayingNotesClick}>Stop</Button>}
         </div>
       </div>
     );
@@ -69,6 +70,7 @@ export default class App extends Component<IAppProps, IAppState> {
     }
 
     const savedState: IAppState = JSON.parse(savedStateStr);
+    savedState.isPlaying = false;
 
     // The saved state only is a subset of the IAppState properties, so not all will get overwritten (e.g. maps)
     this.setState({ ...savedState });
@@ -241,6 +243,47 @@ export default class App extends Component<IAppProps, IAppState> {
     }, 200);
   }
 
+  onPlayNotesClick = (): void => {
+    if (this.state.isPlaying) {
+      return;
+    }
+
+    this.setState({
+      isPlaying: true,
+      editorIsFocused: true
+    });
+
+    for (let i = this.state.focusedNote.chordIndex; i < this.state.chords.length; i++) {
+      const timeout: NodeJS.Timeout = setTimeout(() => {
+        this.playChord(i);
+
+        const newFocusedNote: ITabNoteLocation = {
+          chordIndex: i,
+          stringIndex: 0
+        };
+
+        this.setState({ focusedNote: newFocusedNote })
+
+        if (i === this.state.chords.length - 1) {
+          this.onStopPlayingNotesClick();
+        }
+      }, (i - this.state.focusedNote.chordIndex) * 250);
+
+      this.timeouts.push(timeout);
+    }
+  }
+
+  onStopPlayingNotesClick = (): void => {
+    if (!this.state.isPlaying) {
+      return;
+    }
+
+    this.midiService.stopNotes();
+    this.timeouts.forEach(t => clearTimeout(t));
+    this.timeouts = [];
+    this.setState({ isPlaying: false });
+  }
+
   private getSuggestedChords(): IChord[] | null {
     const melodyStringedNote: IStringedNote | null = this.getFocusedNoteAsStringedNote();
 
@@ -291,16 +334,6 @@ export default class App extends Component<IAppProps, IAppState> {
     };
 
     return melodyNote;
-  }
-
-  private onPlayNotesClick = (): void => {
-    this.midiService.stopNotes();
-
-    for (let i = 0; i < this.state.chords.length; i++) {
-      setTimeout(() => {
-        this.playChord(i);
-      }, i * 250);
-    }
   }
 
   private playChord(chordIndex: number) {
@@ -377,7 +410,8 @@ export default class App extends Component<IAppProps, IAppState> {
       selectedIntervalOptionalPairs: [],
       excludeChordsWithOpenNotes: false,
       maxFretDistance: 4,
-      suggestedChords: null
+      suggestedChords: null,
+      isPlaying: false
     };
   }
 
@@ -436,4 +470,5 @@ interface IAppState {
   // If null, we are not currently suggesting chords.
   // If empty, we are suggesting chords but there are none.
   suggestedChords: IChord[] | null;
+  isPlaying: boolean;
 }

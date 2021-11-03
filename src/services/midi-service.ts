@@ -31,7 +31,7 @@ export class MidiService implements IMidiService {
     let noteIntegers: number[] = notes.map(note => this.musicTheoryService.getNoteValue(note) + 12);
     noteIntegers.sort((a, b) => a - b);
 
-    this.playNoteValues(noteIntegers, 0.04);
+    this.playNoteValues(noteIntegers, 0.02);
   }
 
   stopNotes(): void {

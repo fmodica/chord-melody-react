@@ -49,6 +49,7 @@ export default class App extends Component<IAppProps, IAppState> {
           <Button className='reset-btn' variant='contained' color='secondary' onClick={this.onResetBtnClick}>Start Over</Button>
           {!this.state.isPlaying && <Button className='play-notes-btn' variant='contained' color='primary' onClick={this.onPlayNotesClick}>Play</Button>}
           {this.state.isPlaying && <Button className='play-notes-btn' variant='contained' color='primary' onClick={() => this.onStopPlayingNotesClick()}>Stop</Button>}
+          <input type='range' value={this.state.playSpeed} min={100} max={1000} step={25} onChange={this.onPlaySpeedChange} />
         </div>
       </div>
     );
@@ -271,7 +272,7 @@ export default class App extends Component<IAppProps, IAppState> {
         if (i === this.state.chords.length - 1) {
           this.onStopPlayingNotesClick();
         }
-      }, (i - this.state.focusedNote.chordIndex) * 250);
+      }, (i - this.state.focusedNote.chordIndex) * this.state.playSpeed);
 
       this.timeouts.push(timeout);
     }
@@ -313,6 +314,27 @@ export default class App extends Component<IAppProps, IAppState> {
     );
 
     return suggestedChords.map(this.convertFretsToChord);
+  }
+
+  onPlaySpeedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const callback = () => {
+      if (this.state.isPlaying) {
+        this.onStopPlayingNotesClick(this.onPlayNotesClick);
+      }
+    };
+
+    const value: number = parseFloat(e.target.value);
+
+    this.setState(state => {
+      return {
+        playSpeed: value,
+        // If changing the speed 
+        // focusedNote: {
+        //   chordIndex: state.focusedNote.chordIndex + 1,
+        //   stringIndex: state.focusedNote.stringIndex
+        // }
+      }
+    }, callback);
   }
 
   private convertFretsToChord = (frets: (number | null)[]): IChord => {
@@ -415,7 +437,8 @@ export default class App extends Component<IAppProps, IAppState> {
       excludeChordsWithOpenNotes: false,
       maxFretDistance: 4,
       suggestedChords: null,
-      isPlaying: false
+      isPlaying: false,
+      playSpeed: 250
     };
   }
 
@@ -475,4 +498,5 @@ interface IAppState {
   // If empty, we are suggesting chords but there are none.
   suggestedChords: IChord[] | null;
   isPlaying: boolean;
+  playSpeed: number;
 }

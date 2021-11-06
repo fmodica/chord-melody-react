@@ -8,6 +8,7 @@ import { IMelodyGeneratorService, MelodyGeneratorService } from './services/melo
 import { ArrayUtilities } from './services/array-utilities';
 import './App.css';
 import { IMidiService, MidiService } from './services/midi-service';
+import { MenuItem, Select } from '@material-ui/core';
 
 export default class App extends Component<IAppProps, IAppState> {
   private readonly appStateKey: string = 'app-state';
@@ -50,6 +51,14 @@ export default class App extends Component<IAppProps, IAppState> {
           {!this.state.isPlaying && <Button className='play-notes-btn' variant='contained' color='primary' onClick={this.onPlayNotesClick}>Play</Button>}
           {this.state.isPlaying && <Button className='play-notes-btn' variant='contained' color='primary' onClick={() => this.onStopPlayingNotesClick()}>Stop</Button>}
           <input type='range' value={this.state.playSpeed} min={100} max={1000} step={25} onChange={this.onPlaySpeedChange} />
+
+          <Select onChange={this.onAverageNoteJumpSelected} value={this.state.averageMelodyNoteJump === null ? '' : this.state.averageMelodyNoteJump}>
+            {
+              [1, 2, 3, 4, 5, 6, 7].map(entry => {
+                return <MenuItem key={entry} value={entry}>{entry}</MenuItem>;
+              })
+            }
+          </Select>
         </div>
       </div>
     );
@@ -158,7 +167,8 @@ export default class App extends Component<IAppProps, IAppState> {
       this.state.tuning,
       melodyStringedNote,
       this.state.minFret,
-      this.state.maxFret
+      this.state.maxFret,
+      this.state.averageMelodyNoteJump
     );
 
     const newChords: IChord[] = [...this.state.chords];
@@ -323,18 +333,16 @@ export default class App extends Component<IAppProps, IAppState> {
       }
     };
 
-    const value: number = parseFloat(e.target.value);
+    const newPlaySpeed: number = parseFloat(e.target.value);
 
-    this.setState(state => {
-      return {
-        playSpeed: value,
-        // If changing the speed 
-        // focusedNote: {
-        //   chordIndex: state.focusedNote.chordIndex + 1,
-        //   stringIndex: state.focusedNote.stringIndex
-        // }
-      }
-    }, callback);
+    this.setState({ playSpeed: newPlaySpeed }, callback);
+  }
+
+  onAverageNoteJumpSelected = (event: React.ChangeEvent<{ value: unknown }>): void => {
+    const valueAsString: string | null = event.target.value as string | null;
+    const valueParsed: number | null = valueAsString === null ? 2 : parseInt(valueAsString);
+
+    this.setState({ averageMelodyNoteJump: valueParsed });
   }
 
   private convertFretsToChord = (frets: (number | null)[]): IChord => {
@@ -438,7 +446,8 @@ export default class App extends Component<IAppProps, IAppState> {
       maxFretDistance: 4,
       suggestedChords: null,
       isPlaying: false,
-      playSpeed: 250
+      playSpeed: 250,
+      averageMelodyNoteJump: 2
     };
   }
 
@@ -499,4 +508,5 @@ interface IAppState {
   suggestedChords: IChord[] | null;
   isPlaying: boolean;
   playSpeed: number;
+  averageMelodyNoteJump: number;
 }

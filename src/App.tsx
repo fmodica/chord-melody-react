@@ -50,7 +50,7 @@ export default class App extends Component<IAppProps, IAppState> {
           <Button className='reset-btn' variant='contained' color='secondary' onClick={this.onResetBtnClick}>Start Over</Button>
           {!this.state.isPlaying && <Button className='play-notes-btn' variant='contained' color='primary' onClick={this.onPlayNotesClick}>Play</Button>}
           {this.state.isPlaying && <Button className='play-notes-btn' variant='contained' color='primary' onClick={() => this.onStopPlayingNotesClick()}>Stop</Button>}
-          <input type='range' value={this.state.playSpeed} min={100} max={1000} step={25} onChange={this.onPlaySpeedChange} />
+          <input type='range' value={this.state.playSpeed} min={100} max={300} step={10} onChange={this.onPlaySpeedChange} />
 
           <Select onChange={this.onAverageNoteJumpSelected} value={this.state.averageMelodyNoteJump === null ? '' : this.state.averageMelodyNoteJump}>
             {

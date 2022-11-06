@@ -15,11 +15,6 @@ export class MelodyGeneratorService implements IMelodyGeneratorService {
 
     const fretsOfNotesOnAllStrings: (number | null)[][] = this.getsFretsOfNotesOnAllStrings(allowedNotes, tuning, minFret, maxFret);
 
-    //const firstRandomString = this.getRandomIntInclusive(0, tuning.length - 1);
-    //const firstRandomFret = this.getRandomIntInclusive(0, fretsOfNotesOnAllStrings[firstRandomString].length - 1);
-    //const firstRandomMelodyChord: (number | null)[] = this.musicTheoryService.getNullChord(tuning.length);
-
-    //firstRandomMelodyChord[firstRandomString] = firstRandomFret;
     const firstChord: (number | null)[] = [];
 
     for (let i = 0; i < tuning.length; i++) {
@@ -30,10 +25,6 @@ export class MelodyGeneratorService implements IMelodyGeneratorService {
       }
     }
     const melodyChords: (number | null)[][] = [firstChord];
-
-    //let lastNote: INote = this.musicTheoryService.getNoteFromFret(tuning[firstRandomString], firstRandomFret);
-
-    const fretsOnString: (number | null)[] = fretsOfNotesOnAllStrings[melodyNote.stringIndex];
 
     let lastNote: INote = this.musicTheoryService.getNoteFromFret(tuning[melodyNote.stringIndex], melodyNote.fret);
     let lastFret: number = melodyNote.fret;
@@ -98,12 +89,7 @@ export class MelodyGeneratorService implements IMelodyGeneratorService {
     return melodyChords;
   }
 
-  private getsFretsOfNotesOnAllStrings(
-    notes: NoteLetter[],
-    tuning: INote[],
-    minFret: number,
-    maxFret: number
-  ): (number | null)[][] {
+  private getsFretsOfNotesOnAllStrings(notes: NoteLetter[], tuning: INote[], minFret: number, maxFret: number): (number | null)[][] {
     const fretsOfNotesOnAllStrings: (number | null)[][] = [];
     const requiredNotesSet: Set<NoteLetter> = new Set(notes);
 
@@ -115,13 +101,7 @@ export class MelodyGeneratorService implements IMelodyGeneratorService {
     return fretsOfNotesOnAllStrings;
   }
 
-  private getFretsOfNotesOnString(
-    tuning: INote[],
-    stringIndex: number,
-    requiredNotesSet: Set<NoteLetter>,
-    minFret: number,
-    maxFret: number
-  ): (number | null)[] {
+  private getFretsOfNotesOnString(tuning: INote[], stringIndex: number, requiredNotesSet: Set<NoteLetter>, minFret: number, maxFret: number): (number | null)[] {
     const fretsOfRequiredNotesOnString: (number | null)[] = [/*null*/];
 
     for (let i = 0; i <= maxFret; i++) {

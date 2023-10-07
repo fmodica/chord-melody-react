@@ -2,7 +2,7 @@
 
 Request Dmaj9 chords whose melody note is the 9th fret of the high E string
 
-[chord-melody-demo.webm](https://github.com/fmodica/chord-melody-react/assets/2054989/787ca502-5168-4c30-9143-cd63b3767a68)
+[chord-melody-demo.webm](https://github.com/fmodica/chord-melody-react/assets/2054989/cc3151c6-05aa-478f-8c38-c11ad6570daf)
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 

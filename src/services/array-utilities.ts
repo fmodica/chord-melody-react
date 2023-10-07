@@ -1,5 +1,5 @@
 export class ArrayUtilities {
-  static getMinMax<T>(arr: T[]): { min: T, max: T } {
+  static getMinMax<T>(arr: T[]): { min: T; max: T } {
     let min = arr[0];
     let max = arr[0];
     let i = arr.length;
@@ -19,7 +19,12 @@ export class ArrayUtilities {
     return allCombinations;
   }
 
-  private static getAllCombinationsRecursive<T>(collection: (T | null)[][], index: number, currentCombo: (T | null)[], allCombos: (T | null)[][]): void {
+  private static getAllCombinationsRecursive<T>(
+    collection: (T | null)[][],
+    index: number,
+    currentCombo: (T | null)[],
+    allCombos: (T | null)[][]
+  ): void {
     if (index === collection.length) {
       allCombos.push(currentCombo);
       return;
@@ -31,7 +36,12 @@ export class ArrayUtilities {
       const currentComboCopy = [...currentCombo];
       currentComboCopy.push(currentLevel[i]);
 
-      this.getAllCombinationsRecursive(collection, index + 1, currentComboCopy, allCombos);
+      this.getAllCombinationsRecursive(
+        collection,
+        index + 1,
+        currentComboCopy,
+        allCombos
+      );
     }
   }
 }

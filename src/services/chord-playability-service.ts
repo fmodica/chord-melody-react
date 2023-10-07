@@ -2,7 +2,9 @@ import { ArrayUtilities } from "./array-utilities";
 
 export class ChordPlayabilityService implements IChordPlayabilityService {
   getPlayability(chord: (number | null)[]): number {
-    const chordWithoutNulls: (number | null)[] = chord.filter(fret => fret !== null);
+    const chordWithoutNulls: (number | null)[] = chord.filter(
+      (fret) => fret !== null
+    );
 
     // No notes in the chord
     if (chordWithoutNulls.length === 0) {

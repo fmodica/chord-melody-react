@@ -1,10 +1,25 @@
 import { ArrayUtilities } from "./array-utilities";
-import { ChordPlayabilityService, IChordPlayabilityService } from "./chord-playability-service";
-import { IFretIndexPair, IIntervalOptionalPair, IMusicTheoryService, INote, INoteLetterOptionalPair, Interval, IStringedNote, MusicTheoryService, NoteLetter } from "./music-theory-service";
+import {
+  ChordPlayabilityService,
+  IChordPlayabilityService,
+} from "./chord-playability-service";
+import {
+  IFretIndexPair,
+  IIntervalOptionalPair,
+  IMusicTheoryService,
+  INote,
+  INoteLetterOptionalPair,
+  Interval,
+  IStringedNote,
+  MusicTheoryService,
+  NoteLetter,
+} from "./music-theory-service";
 
 export class ChordMelodyService implements IChordMelodyService {
-  private readonly musicTheoryService: IMusicTheoryService = new MusicTheoryService();
-  private readonly chordPlayabilityService: IChordPlayabilityService = new ChordPlayabilityService();
+  private readonly musicTheoryService: IMusicTheoryService =
+    new MusicTheoryService();
+  private readonly chordPlayabilityService: IChordPlayabilityService =
+    new ChordPlayabilityService();
 
   getChords(
     chordRoot: NoteLetter,
@@ -19,18 +34,27 @@ export class ChordMelodyService implements IChordMelodyService {
   ): (number | null)[][] {
     this.validate(intervalOptionalPairs, tuning, maxFretDistance);
 
-    const noteLetterOptionalPairs: INoteLetterOptionalPair[] = this.musicTheoryService.getNoteLetterOptionalPairs(chordRoot, intervalOptionalPairs);
+    const noteLetterOptionalPairs: INoteLetterOptionalPair[] =
+      this.musicTheoryService.getNoteLetterOptionalPairs(
+        chordRoot,
+        intervalOptionalPairs
+      );
 
-    const fretsOfNotesOnAllStrings: (number | null)[][] = this.getsFretsOfNotesOnAllStrings(
-      noteLetterOptionalPairs.map((pair: INoteLetterOptionalPair) => pair.noteLetter),
-      tuning,
-      melodyStringedNote,
-      minFret,
-      maxFret,
-      excludeChordsWithOpenNotes
+    const fretsOfNotesOnAllStrings: (number | null)[][] =
+      this.getsFretsOfNotesOnAllStrings(
+        noteLetterOptionalPairs.map(
+          (pair: INoteLetterOptionalPair) => pair.noteLetter
+        ),
+        tuning,
+        melodyStringedNote,
+        minFret,
+        maxFret,
+        excludeChordsWithOpenNotes
+      );
+
+    const allCombos: (number | null)[][] = ArrayUtilities.getAllCombinations(
+      fretsOfNotesOnAllStrings
     );
-
-    const allCombos: (number | null)[][] = ArrayUtilities.getAllCombinations(fretsOfNotesOnAllStrings);
 
     const requiredNoteLetters = noteLetterOptionalPairs
       .filter((pair: INoteLetterOptionalPair) => !pair.isOptional)
@@ -38,17 +62,35 @@ export class ChordMelodyService implements IChordMelodyService {
 
     const requiredNoteLetterSet = new Set<NoteLetter>(requiredNoteLetters);
 
-    const filteredCombos: (number | null)[][] = allCombos.filter((chord: (number | null)[]) => {
-      return this.isValidChord(chord, tuning, requiredNoteLetterSet, maxFretDistance);
-    });
+    const filteredCombos: (number | null)[][] = allCombos.filter(
+      (chord: (number | null)[]) => {
+        return this.isValidChord(
+          chord,
+          tuning,
+          requiredNoteLetterSet,
+          maxFretDistance
+        );
+      }
+    );
 
-    const suggestedPlayableChords = filteredCombos.filter(chord => this.chordPlayabilityService.getPlayability(chord) <= 4);
+    const suggestedPlayableChords = filteredCombos.filter(
+      (chord) => this.chordPlayabilityService.getPlayability(chord) <= 4
+    );
 
-    const mapFromLowestValueNoteToChords = new Map<number, (number | null)[][]>();
+    const mapFromLowestValueNoteToChords = new Map<
+      number,
+      (number | null)[][]
+    >();
 
-    suggestedPlayableChords.forEach(chord => {
-      const chordWithoutNulls: IFretIndexPair[] = this.musicTheoryService.getChordWithoutNulls(chord);
-      const noteValues: number[] = chordWithoutNulls.map(fretIndexPair => this.musicTheoryService.getNoteValueFromFret(tuning[fretIndexPair.index], fretIndexPair.fret as number));
+    suggestedPlayableChords.forEach((chord) => {
+      const chordWithoutNulls: IFretIndexPair[] =
+        this.musicTheoryService.getChordWithoutNulls(chord);
+      const noteValues: number[] = chordWithoutNulls.map((fretIndexPair) =>
+        this.musicTheoryService.getNoteValueFromFret(
+          tuning[fretIndexPair.index],
+          fretIndexPair.fret as number
+        )
+      );
 
       const { min: minValue } = ArrayUtilities.getMinMax(noteValues);
 
@@ -59,10 +101,12 @@ export class ChordMelodyService implements IChordMelodyService {
       mapFromLowestValueNoteToChords.get(minValue)?.push(chord);
     });
 
-    mapFromLowestValueNoteToChords.forEach(chords => {
+    mapFromLowestValueNoteToChords.forEach((chords) => {
       chords.sort((a, b) => {
-        const aWithoutNulls: IFretIndexPair[] = this.musicTheoryService.getChordWithoutNulls(a);
-        const bWithoutNulls: IFretIndexPair[] = this.musicTheoryService.getChordWithoutNulls(b);
+        const aWithoutNulls: IFretIndexPair[] =
+          this.musicTheoryService.getChordWithoutNulls(a);
+        const bWithoutNulls: IFretIndexPair[] =
+          this.musicTheoryService.getChordWithoutNulls(b);
 
         // Sort by chord length
         if (aWithoutNulls.length !== bWithoutNulls.length) {
@@ -70,14 +114,28 @@ export class ChordMelodyService implements IChordMelodyService {
         }
 
         // Same chord length, sort by sum of non-bass note values
-        const aNoteValues: number[] = aWithoutNulls.map(fretIndexPair => this.musicTheoryService.getNoteValueFromFret(tuning[fretIndexPair.index], fretIndexPair.fret as number));
-        const bNoteValues: number[] = bWithoutNulls.map(fretIndexPair => this.musicTheoryService.getNoteValueFromFret(tuning[fretIndexPair.index], fretIndexPair.fret as number));
+        const aNoteValues: number[] = aWithoutNulls.map((fretIndexPair) =>
+          this.musicTheoryService.getNoteValueFromFret(
+            tuning[fretIndexPair.index],
+            fretIndexPair.fret as number
+          )
+        );
+        const bNoteValues: number[] = bWithoutNulls.map((fretIndexPair) =>
+          this.musicTheoryService.getNoteValueFromFret(
+            tuning[fretIndexPair.index],
+            fretIndexPair.fret as number
+          )
+        );
 
         const { min: aMinNoteValue } = ArrayUtilities.getMinMax(aNoteValues);
         const { min: bMinNoteValue } = ArrayUtilities.getMinMax(bNoteValues);
 
-        const aSum = aNoteValues.filter(noteValue => noteValue !== aMinNoteValue).reduce((a, b) => a + b, 0);
-        const bSum = bNoteValues.filter(noteValue => noteValue !== bMinNoteValue).reduce((a, b) => a + b, 0);
+        const aSum = aNoteValues
+          .filter((noteValue) => noteValue !== aMinNoteValue)
+          .reduce((a, b) => a + b, 0);
+        const bSum = bNoteValues
+          .filter((noteValue) => noteValue !== bMinNoteValue)
+          .reduce((a, b) => a + b, 0);
 
         return bSum - aSum;
       });
@@ -98,7 +156,10 @@ export class ChordMelodyService implements IChordMelodyService {
   ): (number | null)[][] {
     const fretsOfNotesOnAllStrings: (number | null)[][] = [];
     const requiredNotesSet: Set<NoteLetter> = new Set(notes);
-    const melodyNote: INote = this.musicTheoryService.getNoteFromFret(tuning[melodyStringedNote.stringIndex], melodyStringedNote.fret);
+    const melodyNote: INote = this.musicTheoryService.getNoteFromFret(
+      tuning[melodyStringedNote.stringIndex],
+      melodyStringedNote.fret
+    );
 
     for (let stringIndex = 0; stringIndex < tuning.length; stringIndex++) {
       if (stringIndex === melodyStringedNote.stringIndex) {
@@ -106,14 +167,28 @@ export class ChordMelodyService implements IChordMelodyService {
         continue;
       }
 
-      const fretsOfRequiredNotesOnString: (number | null)[] = this.getFretsOfNotesOnString(tuning, stringIndex, requiredNotesSet, melodyNote, minFret, maxFret, excludeChordsWithOpenNotes);
+      const fretsOfRequiredNotesOnString: (number | null)[] =
+        this.getFretsOfNotesOnString(
+          tuning,
+          stringIndex,
+          requiredNotesSet,
+          melodyNote,
+          minFret,
+          maxFret,
+          excludeChordsWithOpenNotes
+        );
       fretsOfNotesOnAllStrings.push(fretsOfRequiredNotesOnString);
     }
 
     return fretsOfNotesOnAllStrings;
   }
 
-  private isValidChord(chord: (number | null)[], tuning: INote[], requiredNoteLetterSet: Set<NoteLetter>, maxFretDistance: number): boolean {
+  private isValidChord(
+    chord: (number | null)[],
+    tuning: INote[],
+    requiredNoteLetterSet: Set<NoteLetter>,
+    maxFretDistance: number
+  ): boolean {
     if (chord.length === 0) {
       throw new Error(`The chord has no elements.`);
     }
@@ -129,7 +204,11 @@ export class ChordMelodyService implements IChordMelodyService {
     return true;
   }
 
-  private meetsNotesRequirement(chord: (number | null)[], tuning: INote[], requiredNoteLetterSet: Set<NoteLetter>): boolean {
+  private meetsNotesRequirement(
+    chord: (number | null)[],
+    tuning: INote[],
+    requiredNoteLetterSet: Set<NoteLetter>
+  ): boolean {
     const noteLetterSet = new Set<NoteLetter>();
 
     for (let i = 0; i < chord.length; i++) {
@@ -139,7 +218,10 @@ export class ChordMelodyService implements IChordMelodyService {
         continue;
       }
 
-      const note: INote = this.musicTheoryService.getNoteFromFret(tuning[i], fret);
+      const note: INote = this.musicTheoryService.getNoteFromFret(
+        tuning[i],
+        fret
+      );
 
       if (requiredNoteLetterSet.has(note.letter)) {
         noteLetterSet.add(note.letter);
@@ -149,18 +231,25 @@ export class ChordMelodyService implements IChordMelodyService {
     return noteLetterSet.size === requiredNoteLetterSet.size;
   }
 
-  private meetsLengthRequirement(chord: (number | null)[], maxFretDistance: number): boolean {
+  private meetsLengthRequirement(
+    chord: (number | null)[],
+    maxFretDistance: number
+  ): boolean {
     // Cast to get around TS errors, since we know there are no nulls
-    const chordWithoutNullsOrOpens: number[] = chord.filter(fret => fret !== null && fret !== 0) as number[];
+    const chordWithoutNullsOrOpens: number[] = chord.filter(
+      (fret) => fret !== null && fret !== 0
+    ) as number[];
 
     // All null or open
     if (chordWithoutNullsOrOpens.length === 0) {
       return true;
     }
 
-    const { min, max } = ArrayUtilities.getMinMax(chordWithoutNullsOrOpens as number[]);
+    const { min, max } = ArrayUtilities.getMinMax(
+      chordWithoutNullsOrOpens as number[]
+    );
 
-    return (max - min) <= maxFretDistance;
+    return max - min <= maxFretDistance;
   }
 
   private getFretsOfNotesOnString(
@@ -173,7 +262,8 @@ export class ChordMelodyService implements IChordMelodyService {
     excludeChordsWithOpenNotes: boolean
   ): (number | null)[] {
     const fretsOfRequiredNotesOnString: (number | null)[] = [null];
-    const melodyNoteValue: number = this.musicTheoryService.getNoteValue(melodyNote);
+    const melodyNoteValue: number =
+      this.musicTheoryService.getNoteValue(melodyNote);
 
     for (let i = 0; i <= maxFret; i++) {
       if (i === 0 && excludeChordsWithOpenNotes) {
@@ -184,9 +274,15 @@ export class ChordMelodyService implements IChordMelodyService {
         continue;
       }
 
-      const note: INote = this.musicTheoryService.getNoteFromFret(tuning[stringIndex], i);
+      const note: INote = this.musicTheoryService.getNoteFromFret(
+        tuning[stringIndex],
+        i
+      );
 
-      if (requiredNotesSet.has(note.letter) && this.musicTheoryService.getNoteValue(note) <= melodyNoteValue) {
+      if (
+        requiredNotesSet.has(note.letter) &&
+        this.musicTheoryService.getNoteValue(note) <= melodyNoteValue
+      ) {
         fretsOfRequiredNotesOnString.push(i);
       }
     }
@@ -194,7 +290,11 @@ export class ChordMelodyService implements IChordMelodyService {
     return fretsOfRequiredNotesOnString;
   }
 
-  private validate(intervalOptionalPairs: IIntervalOptionalPair[], tuning: INote[], maxFretDistance: number): void {
+  private validate(
+    intervalOptionalPairs: IIntervalOptionalPair[],
+    tuning: INote[],
+    maxFretDistance: number
+  ): void {
     // Check for uniqueness
     if (intervalOptionalPairs.length === 0) {
       throw new Error(`The interval-optional pairs array has no elements.`);
@@ -205,7 +305,9 @@ export class ChordMelodyService implements IChordMelodyService {
     }
 
     if (maxFretDistance <= 0) {
-      throw new Error(`The max fret distance must be greater than zero, but it is ${maxFretDistance}.`);
+      throw new Error(
+        `The max fret distance must be greater than zero, but it is ${maxFretDistance}.`
+      );
     }
   }
 }

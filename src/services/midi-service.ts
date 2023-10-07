@@ -1,4 +1,8 @@
-import { IMusicTheoryService, INote, MusicTheoryService } from "./music-theory-service";
+import {
+  IMusicTheoryService,
+  INote,
+  MusicTheoryService,
+} from "./music-theory-service";
 
 export class MidiService implements IMidiService {
   public highestNoteValue = 108;
@@ -7,19 +11,20 @@ export class MidiService implements IMidiService {
   public ready = false;
   public MIDI: any;
 
-  private readonly musicTheoryService: IMusicTheoryService = new MusicTheoryService();
+  private readonly musicTheoryService: IMusicTheoryService =
+    new MusicTheoryService();
 
   constructor() {
     this.MIDI = (<any>window).MIDI;
 
     this.MIDI.loadPlugin({
       soundfontUrl: `${process.env.PUBLIC_URL}/midi/soundfonts/`,
-      instrument: 'acoustic_guitar_nylon',
-      onprogress: (state: any, progress: any) => { },
+      instrument: "acoustic_guitar_nylon",
+      onprogress: (state: any, progress: any) => {},
       onsuccess: () => {
         this.ready = true;
-        console.log('MIDI JS Success');
-      }
+        console.log("MIDI JS Success");
+      },
     });
   }
 
@@ -28,7 +33,9 @@ export class MidiService implements IMidiService {
       return;
     }
 
-    let noteIntegers: number[] = notes.map(note => this.musicTheoryService.getNoteValue(note) + 12);
+    let noteIntegers: number[] = notes.map(
+      (note) => this.musicTheoryService.getNoteValue(note) + 12
+    );
     noteIntegers.sort((a, b) => a - b);
 
     this.playNoteValues(noteIntegers, 0.02);
